@@ -1591,7 +1591,7 @@
   <div class="auth-overlay" id="authOverlay">
     <div class="auth-panel">
       <h2 id="authTitle">登录</h2>
-      <div class="auth-sub" id="authSub">使用邮箱登录以跨设备同步</div>
+      <div class="auth-sub" id="authSub">使用邮箱登录以跨设备同步；不登录仅在本地使用，不会同步</div>
       <div class="auth-error" id="authError"></div>
       <input type="email" id="authEmail" placeholder="邮箱" />
       <input type="password" id="authPassword" placeholder="密码" />
@@ -1601,7 +1601,7 @@
         <a id="authSwitchLink">注册</a>
       </div>
       <div style="margin-top:10px;text-align:center;">
-        <button class="btn-action" id="authGuestBtn" style="width:100%;">以游客身份继续</button>
+        <button class="btn-action" id="authGuestBtn" style="width:100%;">暂不登录，仅本地使用</button>
       </div>
     </div>
   </div>
@@ -2290,6 +2290,7 @@
 
         if (result.data.session) {
           currentUser = result.data.session.user;
+          window._authDismissed = false;
           authOverlay.classList.remove('open');
           authToggleBtn.innerHTML = '<svg class="ico-sm" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>' + escapeHTML(currentUser.email).slice(0, 8) + '…</span>';
           updateSyncStatusUI('online', '已登录');
@@ -2316,8 +2317,9 @@
         if (confirm('确定要退出登录吗？本地数据不会丢失。')) {
           if (supabase) supabase.auth.signOut();
           currentUser = null;
+          window._authDismissed = false; // 退出后允许再次自动弹出登录引导
           authToggleBtn.innerHTML = '<svg class="ico-sm" viewBox="0 0 24 24"><path d="M21 2l-2 2m-1.5 1.5L14 9l-3 3-4-4-5 5 1.5 1.5M7 17l4 4 1-1-1-1 2-2-1-1 1-1"/></svg><span>登录</span>';
-          updateSyncStatusUI('offline', '本地');
+          updateSyncStatusUI('offline', (config.sbUrl && config.sbKey) ? '未登录' : '本地');
           showFeedback('已退出');
         }
         return;
@@ -2336,9 +2338,14 @@
 
     authGuestBtn.addEventListener('click', function() {
       authOverlay.classList.remove('open');
-      showFeedback('本地模式');
+      currentUser = null;
+      window._authDismissed = true; // 用户主动选择本地使用后，不再自动弹登录面板
+      updateSyncStatusUI('offline', (config.sbUrl && config.sbKey) ? '未登录·本地' : '本地');
+      showFeedback('仅本地使用，不会同步');
     });
 
+    // FIX: 强制注册登录——已配置 Supabase 但未登录时提示并自动弹出注册/登录面板；
+    // 未登录状态下云端读写均被 syncToCloud/loadFromCloud 的 currentUser 检查拦截，仅本地可用
     async function checkAuthSession() {
       if (!supabase) return;
       try {
@@ -2350,8 +2357,29 @@
           await loadFromCloud();
           renderRecords();
           renderSummary();
+        } else {
+          // 已配置 Supabase 但未登录
+          currentUser = null;
+          authToggleBtn.innerHTML = '<svg class="ico-sm" viewBox="0 0 24 24"><path d="M21 2l-2 2m-1.5 1.5L14 9l-3 3-4-4-5 5 1.5 1.5M7 17l4 4 1-1-1-1 2-2-1-1 1-1"/></svg><span>登录</span>';
+          if (config.sbUrl && config.sbKey) {
+            updateSyncStatusUI('offline', '未登录');
+            setAuthMode('login');
+            authEmail.value = '';
+            authPassword.value = '';
+            authError.classList.remove('show');
+            // 仅首次自动弹出：用户主动选择本地使用（游客）后不再反复打断
+            if (!window._authDismissed) {
+              authOverlay.classList.add('open');
+            }
+          } else {
+            updateSyncStatusUI('offline', '本地');
+          }
         }
-      } catch (e) {}
+      } catch (e) {
+        // 会话检查异常（网络/存储受限等）：不阻断本地使用，仅标记离线
+        currentUser = null;
+        if (config.sbUrl && config.sbKey) updateSyncStatusUI('offline', '未登录');
+      }
     }
 
     async function syncToCloud() {
