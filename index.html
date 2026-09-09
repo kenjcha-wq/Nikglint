@@ -3,7 +3,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>GLINT · 万物集 / 象库</title>
 
   <!-- Supabase SDK -->
@@ -27,6 +27,8 @@
       --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
       --wallpaper: #edf0f2;
       --wallpaper-img: none;
+      --tab-height: 64px;
+      --header-height: 52px;
     }
 
     /* ===== Reset ===== */
@@ -53,6 +55,7 @@
       transition: background-image 0.3s ease, background-color 0.3s ease;
       position: relative;
       -webkit-font-smoothing: antialiased;
+      padding-bottom: var(--tab-height);
     }
 
     body.wp-custom {
@@ -131,8 +134,8 @@
       pointer-events: none;
     }
     .ico-lg {
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       stroke-width: 1.5;
     }
     .ico-sm {
@@ -145,26 +148,26 @@
     header {
       background: var(--surface);
       border-bottom: 1px solid var(--border-dark);
-      padding: 10px 20px;
+      padding: 8px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       position: sticky;
       top: 0;
       z-index: 50;
-      flex-wrap: wrap;
-      gap: 6px;
+      min-height: var(--header-height);
+      flex-shrink: 0;
     }
 
     .brand {
       display: flex;
       align-items: baseline;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
     }
     .brand h1 {
       font-family: var(--mono);
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       letter-spacing: 0.06em;
     }
@@ -179,42 +182,41 @@
     .brand h1 .title-sub {
       font-weight: 400;
       color: var(--muted);
-      font-size: 13px;
+      font-size: 11px;
     }
     .brand .brand-foot {
       font-family: var(--mono);
-      font-size: 9px;
+      font-size: 8px;
       color: var(--muted);
       letter-spacing: 0.12em;
       opacity: 0.5;
-      margin-left: 2px;
     }
     .brand .index-tag {
       font-family: var(--mono);
-      font-size: 9px;
+      font-size: 8px;
       background: var(--light-gray);
-      padding: 1px 8px;
+      padding: 1px 6px;
       border: 1px solid var(--border);
       color: var(--muted);
     }
 
     .header-meta {
       font-family: var(--mono);
-      font-size: 10px;
+      font-size: 9px;
       color: var(--muted);
       display: flex;
-      gap: 10px;
+      gap: 6px;
       align-items: center;
       flex-wrap: wrap;
     }
 
     .sync-status {
-      font-size: 9px;
-      padding: 2px 8px;
+      font-size: 8px;
+      padding: 2px 6px;
       border-radius: 2px;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
     }
     .sync-status.online {
       background: #e8f0e8;
@@ -240,13 +242,18 @@
       border-radius: 2px;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
       line-height: 1;
       background: var(--surface);
+      white-space: nowrap;
     }
     .header-btn:hover {
       border-color: var(--accent);
       color: var(--text);
+    }
+    .header-btn .ico-sm {
+      width: 10px;
+      height: 10px;
     }
 
     /* ===== Overlay 修复 ===== */
@@ -286,14 +293,14 @@
       width: 94%;
       max-height: 85vh;
       overflow-y: auto;
-      padding: 24px 28px;
+      padding: 20px 22px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
     }
     .settings-panel h2 {
       font-family: var(--mono);
       font-size: 12px;
       letter-spacing: 0.1em;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
       border-bottom: 1px solid var(--border);
       padding-bottom: 10px;
       display: flex;
@@ -302,7 +309,7 @@
     }
 
     .setting-group {
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
     .setting-group label {
       font-family: var(--mono);
@@ -317,7 +324,7 @@
     .setting-group select,
     .setting-group textarea {
       width: 100%;
-      padding: 7px 10px;
+      padding: 6px 10px;
       border: 1px solid var(--border);
       background: var(--bg);
       font-family: var(--sans);
@@ -331,18 +338,18 @@
       border-color: var(--accent);
     }
     .setting-group textarea {
-      height: 56px;
+      height: 50px;
       resize: vertical;
       font-size: 12px;
       font-family: var(--mono);
     }
     .setting-group .input-row {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       margin-top: 4px;
     }
     .setting-group .input-row .btn-sm {
-      padding: 7px 14px;
+      padding: 6px 12px;
       background: var(--accent);
       border: none;
       color: #fff;
@@ -353,7 +360,7 @@
       white-space: nowrap;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
     }
     .setting-group .input-row .btn-sm:hover {
       background: var(--accent-dark);
@@ -371,7 +378,7 @@
     .wallpaper-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
+      gap: 6px;
       margin-top: 4px;
     }
     .wp-option {
@@ -383,7 +390,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 10px;
+      font-size: 9px;
       color: var(--muted);
       font-family: var(--mono);
       position: relative;
@@ -415,11 +422,11 @@
     .wp-upload-area {
       grid-column: span 2;
       border: 2px dashed var(--border);
-      padding: 12px;
+      padding: 10px;
       text-align: center;
       cursor: pointer;
       font-family: var(--mono);
-      font-size: 10px;
+      font-size: 9px;
       color: var(--muted);
       display: flex;
       flex-direction: column;
@@ -438,7 +445,7 @@
     }
 
     .settings-close {
-      margin-top: 14px;
+      margin-top: 12px;
       background: var(--border-dark);
       color: #fff;
       border: none;
@@ -476,7 +483,7 @@
       border: 1px solid var(--border-dark);
       max-width: 380px;
       width: 92%;
-      padding: 32px 28px;
+      padding: 28px 24px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     }
     .auth-panel h2 {
@@ -488,7 +495,7 @@
     .auth-panel .auth-sub {
       font-size: 12px;
       color: var(--muted);
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
     .auth-panel input {
       width: 100%;
@@ -521,7 +528,7 @@
     }
     .auth-panel .auth-switch {
       text-align: center;
-      margin-top: 14px;
+      margin-top: 12px;
       font-size: 12px;
       color: var(--muted);
     }
@@ -562,21 +569,19 @@
       color: #fff;
     }
 
-    /* ===== Chat Overlay ===== */
+    /* ===== Chat Overlay (移动端全屏) ===== */
     .chat-overlay {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
-      width: 420px;
-      max-width: 94vw;
-      max-height: 75vh;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      top: var(--header-height);
       background: var(--surface);
-      border: 1px solid var(--border-dark);
+      border: none;
       box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
       z-index: 80;
       display: none;
       flex-direction: column;
-      border-radius: 4px;
       overflow: hidden;
     }
     .chat-overlay.open {
@@ -584,7 +589,7 @@
     }
 
     .chat-header {
-      padding: 12px 18px;
+      padding: 10px 16px;
       border-bottom: 1px solid var(--border);
       background: var(--light-gray);
       display: flex;
@@ -593,14 +598,16 @@
       font-family: var(--mono);
       font-size: 11px;
       font-weight: 600;
+      flex-shrink: 0;
     }
     .chat-header .chat-close {
       background: none;
       border: none;
-      font-size: 14px;
+      font-size: 16px;
       cursor: pointer;
       color: var(--muted);
       line-height: 1;
+      padding: 4px;
     }
     .chat-header .chat-close:hover {
       color: var(--text);
@@ -608,14 +615,12 @@
 
     .chat-messages {
       flex: 1;
-      padding: 14px 18px;
+      padding: 14px 16px;
       overflow-y: auto;
-      max-height: 450px;
       display: flex;
       flex-direction: column;
       gap: 10px;
       background: var(--bg);
-      min-height: 200px;
     }
 
     .chat-msg {
@@ -653,6 +658,7 @@
       padding: 10px 16px;
       border-top: 1px solid var(--border);
       background: var(--surface);
+      flex-shrink: 0;
     }
     .chat-input-area input {
       flex: 1;
@@ -681,51 +687,20 @@
       opacity: 0.85;
     }
 
-    /* ===== Chat Toggle Button - 优化悬浮球 ===== */
-    .chat-toggle-btn {
-      position: fixed;
-      bottom: 28px;
-      right: 28px;
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      background: var(--accent-warm);
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      z-index: 70;
-      box-shadow: 0 4px 20px var(--accent-glow), 0 4px 12px rgba(0, 0, 0, 0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
-    }
-    .chat-toggle-btn:hover {
-      transform: scale(1.08);
-      box-shadow: 0 6px 28px var(--accent-glow), 0 6px 16px rgba(0, 0, 0, 0.2);
-    }
-    .chat-toggle-btn:active {
-      transform: scale(0.94);
-    }
-    .chat-toggle-btn .ico-lg {
-      stroke-width: 1.8;
-      width: 22px;
-      height: 22px;
-    }
-
     /* ===== Daily Reminder ===== */
     .daily-reminder {
       position: fixed;
-      bottom: 90px;
-      right: 28px;
+      bottom: calc(var(--tab-height) + 16px);
+      left: 50%;
+      transform: translateX(-50%);
       background: var(--surface);
       border: 1px solid var(--accent-warm);
-      padding: 12px 18px;
+      padding: 10px 16px;
       font-size: 12.5px;
       color: var(--text);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
       border-radius: 2px;
-      max-width: 320px;
+      max-width: 90%;
       z-index: 60;
       display: none;
       animation: fadeSlideIn 0.3s ease;
@@ -749,8 +724,8 @@
     }
 
     @keyframes fadeSlideIn {
-      from { opacity: 0; transform: translateY(12px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
 
     /* ===== Main Layout ===== */
@@ -758,80 +733,173 @@
       max-width: 1440px;
       width: 100%;
       margin: 0 auto;
-      padding: 24px 28px;
-      display: grid;
-      grid-template-columns: 340px 1fr 340px;
-      gap: 24px;
+      padding: 12px 16px;
       flex: 1;
-      padding-bottom: 100px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+      padding-bottom: 12px;
     }
 
-    @media (max-width: 1200px) {
-      .container {
-        grid-template-columns: 300px 1fr 300px;
-        gap: 18px;
-        padding: 18px 20px;
-      }
-    }
-
-    @media (max-width: 1080px) {
-      .container {
-        grid-template-columns: 280px 1fr;
-        gap: 16px;
-        padding: 16px;
-      }
-      .summary-column {
-        grid-column: span 2;
-      }
-    }
-
-    @media (max-width: 768px) {
-      header {
-        padding: 8px 14px;
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .header-meta .date-stamp {
-        display: none;
+    /* ===== 桌面端三栏 ===== */
+    @media (min-width: 769px) {
+      body {
+        padding-bottom: 0;
       }
       .container {
-        display: flex;
-        flex-direction: column;
-        padding: 12px;
-        gap: 16px;
-        padding-bottom: 90px;
+        display: grid;
+        grid-template-columns: 340px 1fr 340px;
+        gap: 24px;
+        padding: 24px 28px;
+        padding-bottom: 100px;
       }
-      .summary-column {
-        grid-column: span 1;
+      .tab-content {
+        display: block !important;
       }
-      .chat-overlay {
-        bottom: 80px;
-        right: 12px;
-        width: 94vw;
-        max-height: 60vh;
+      .mobile-tab-bar {
+        display: none !important;
       }
       .chat-toggle-btn {
-        bottom: 16px;
-        right: 16px;
-        width: 46px;
-        height: 46px;
+        display: flex !important;
       }
-      .chat-toggle-btn .ico-lg {
-        width: 18px;
-        height: 18px;
+      .chat-overlay {
+        bottom: 24px;
+        right: 24px;
+        left: auto;
+        top: auto;
+        width: 420px;
+        max-width: 94vw;
+        max-height: 75vh;
+        border: 1px solid var(--border-dark);
+        border-radius: 4px;
       }
       .daily-reminder {
-        bottom: 72px;
-        right: 12px;
-        left: 12px;
-        max-width: none;
+        bottom: 90px;
+        left: auto;
+        right: 28px;
+        transform: none;
+        max-width: 320px;
       }
-      .settings-panel {
-        padding: 16px;
+    }
+
+    /* ===== 移动端单栏 + 底部导航 ===== */
+    @media (max-width: 768px) {
+      .container {
+        padding: 12px;
       }
-      .auth-panel {
-        padding: 24px 18px;
+      .tab-content {
+        display: none;
       }
+      .tab-content.active {
+        display: block;
+      }
+      .chat-toggle-btn {
+        display: none !important;
+      }
+      .daily-reminder {
+        bottom: calc(var(--tab-height) + 16px);
+      }
+      header {
+        padding: 6px 12px;
+        min-height: 44px;
+      }
+      .brand h1 {
+        font-size: 13px;
+      }
+      .brand h1 .title-sub {
+        font-size: 10px;
+      }
+      .brand .brand-foot {
+        display: none;
+      }
+      .header-meta .record-count-label {
+        display: none;
+      }
+      .header-btn {
+        padding: 2px 6px;
+        font-size: 8px;
+      }
+    }
+
+    /* ===== Tab Content ===== */
+    .tab-content {
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== Mobile Tab Bar ===== */
+    .mobile-tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--tab-height);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: none;
+      z-index: 60;
+      justify-content: space-around;
+      align-items: center;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    @media (max-width: 768px) {
+      .mobile-tab-bar {
+        display: flex;
+      }
+    }
+
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 8px;
+      cursor: pointer;
+      padding: 4px 12px;
+      transition: color 0.2s;
+      position: relative;
+      -webkit-tap-highlight-color: transparent;
+      flex: 1;
+      height: 100%;
+      max-width: 80px;
+    }
+    .tab-item .ico-lg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 1.6;
+    }
+    .tab-item.active {
+      color: var(--accent-dark);
+    }
+    .tab-item.active .ico-lg {
+      stroke: var(--accent-dark);
+    }
+    .tab-item .tab-badge {
+      position: absolute;
+      top: 6px;
+      right: 50%;
+      transform: translateX(calc(50% + 18px));
+      background: var(--accent);
+      color: #fff;
+      font-size: 8px;
+      padding: 0 5px;
+      border-radius: 8px;
+      min-width: 16px;
+      text-align: center;
+      line-height: 16px;
+      font-weight: 600;
+    }
+    .tab-item .tab-label {
+      font-size: 8px;
+      letter-spacing: 0.04em;
     }
 
     /* ===== Panel ===== */
@@ -843,10 +911,18 @@
       position: relative;
       border-radius: 2px;
       overflow: hidden;
+      height: 100%;
+      min-height: 400px;
+    }
+    @media (max-width: 768px) {
+      .panel {
+        min-height: 300px;
+        border-radius: 4px;
+      }
     }
 
     .panel-header {
-      padding: 10px 16px;
+      padding: 8px 14px;
       border-bottom: 1px solid var(--border);
       background: var(--light-gray);
       font-family: var(--mono);
@@ -856,6 +932,7 @@
       justify-content: space-between;
       align-items: center;
       letter-spacing: 0.06em;
+      flex-shrink: 0;
     }
     .panel-header .panel-count {
       color: var(--accent);
@@ -868,59 +945,60 @@
 
     /* ===== Left: Input ===== */
     .input-section {
-      padding: 16px 18px 18px;
+      padding: 14px 16px 16px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
+      flex: 1;
     }
 
     .entry-guide {
       text-align: center;
-      padding: 8px 0 6px;
+      padding: 6px 0 4px;
       font-family: var(--mono);
-      font-size: 12px;
+      font-size: 11px;
       color: var(--muted);
-      letter-spacing: 0.06em;
+      letter-spacing: 0.04em;
       border-bottom: 1px solid var(--border);
       margin-bottom: 2px;
     }
     .entry-guide strong {
       color: var(--text);
       font-weight: 600;
-      letter-spacing: 0.08em;
-      font-size: 13px;
+      letter-spacing: 0.06em;
+      font-size: 12px;
     }
 
     .category-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
+      gap: 5px;
     }
     .category-grid .cat-btn {
       border: 1px solid var(--border);
       background: var(--surface);
-      padding: 8px 4px 7px;
+      padding: 6px 2px 5px;
       text-align: center;
       cursor: pointer;
       font-family: var(--sans);
-      font-size: 11px;
+      font-size: 10px;
       transition: all 0.15s ease;
       border-radius: 2px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
       color: var(--text);
     }
     .category-grid .cat-btn .cat-icon {
-      height: 18px;
+      height: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: var(--muted);
     }
     .category-grid .cat-btn .cat-label {
-      font-size: 11px;
+      font-size: 10px;
       line-height: 1.2;
     }
     .category-grid .cat-btn.active {
@@ -936,13 +1014,13 @@
 
     textarea {
       width: 100%;
-      height: 110px;
-      padding: 10px 14px;
+      height: 100px;
+      padding: 10px 12px;
       border: 1px solid var(--border);
       background: var(--bg);
       font-family: var(--sans);
       font-size: 13px;
-      line-height: 1.7;
+      line-height: 1.6;
       resize: vertical;
       outline: none;
       border-radius: 2px;
@@ -956,7 +1034,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
     }
     .char-count {
@@ -978,7 +1056,7 @@
       background: var(--border-dark);
       color: #fff;
       border: none;
-      padding: 6px 18px;
+      padding: 6px 16px;
       font-family: var(--mono);
       font-size: 10px;
       font-weight: 600;
@@ -992,28 +1070,33 @@
 
     /* ===== Middle: Timeline ===== */
     .timeline-panel {
-      min-height: 400px;
+      min-height: 300px;
+    }
+    .timeline-panel .records-list {
+      flex: 1;
+      overflow-y: auto;
     }
 
     .filter-bar {
-      padding: 8px 14px;
+      padding: 6px 12px;
       border-bottom: 1px solid var(--border);
       display: flex;
-      gap: 14px;
+      gap: 10px;
       overflow-x: auto;
       font-family: var(--mono);
       font-size: 9px;
       align-items: center;
       flex-wrap: nowrap;
+      flex-shrink: 0;
     }
     .filter-item {
       cursor: pointer;
       color: var(--muted);
       white-space: nowrap;
-      padding: 4px 0;
+      padding: 3px 0;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
       flex-shrink: 0;
     }
     .filter-item.active {
@@ -1026,11 +1109,12 @@
     }
 
     .search-bar {
-      padding: 6px 14px;
+      padding: 6px 12px;
       border-bottom: 1px solid var(--border);
       display: flex;
-      gap: 8px;
+      gap: 6px;
       align-items: center;
+      flex-shrink: 0;
     }
     .search-bar input {
       flex: 1;
@@ -1068,11 +1152,11 @@
       list-style: none;
       padding: 0;
       overflow-y: auto;
-      max-height: calc(100vh - 280px);
+      flex: 1;
     }
 
     .date-group .date-label {
-      padding: 10px 16px 6px 16px;
+      padding: 8px 14px 4px 14px;
       font-family: var(--mono);
       font-size: 9px;
       color: var(--muted);
@@ -1080,14 +1164,17 @@
       background: var(--bg);
       border-bottom: 1px solid var(--border);
       font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 2;
     }
 
     .record-item {
-      padding: 12px 16px;
+      padding: 10px 14px;
       border-bottom: 1px solid var(--border);
       display: grid;
-      grid-template-columns: 32px 1fr 20px;
-      gap: 12px;
+      grid-template-columns: 28px 1fr 20px;
+      gap: 10px;
       align-items: start;
       transition: background 0.15s;
     }
@@ -1104,7 +1191,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
       padding-top: 2px;
     }
     .record-cat-icon {
@@ -1112,8 +1199,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
     }
     .record-time {
       color: var(--muted);
@@ -1125,7 +1212,7 @@
       font-size: 13px;
       word-break: break-word;
       white-space: pre-wrap;
-      line-height: 1.6;
+      line-height: 1.5;
     }
 
     .record-delete {
@@ -1147,16 +1234,16 @@
     }
 
     .empty-state {
-      padding: 56px 20px;
+      padding: 40px 16px;
       text-align: center;
       color: var(--muted);
       font-family: var(--mono);
       font-size: 10px;
-      line-height: 2.2;
+      line-height: 2;
     }
     .empty-state .empty-icon {
       display: inline-flex;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       opacity: 0.5;
     }
 
@@ -1164,10 +1251,11 @@
     .summary-column .summary-tabs {
       display: flex;
       border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
     }
     .tab-btn {
       flex: 1;
-      padding: 8px 6px;
+      padding: 6px;
       text-align: center;
       background: transparent;
       border: none;
@@ -1189,27 +1277,28 @@
     }
 
     .summary-content {
-      padding: 16px 18px 18px;
+      padding: 14px 16px 16px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
+      flex: 1;
     }
 
     .summary-stats {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
+      gap: 6px;
     }
     .summary-stat {
       background: var(--bg);
-      padding: 10px 12px;
+      padding: 8px 10px;
       text-align: center;
       border-radius: 2px;
       border: 1px solid var(--border);
     }
     .summary-stat .stat-number {
       font-family: var(--mono);
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 700;
       color: var(--accent);
     }
@@ -1222,23 +1311,24 @@
 
     .summary-box {
       border: 1px dashed var(--border);
-      padding: 14px 16px;
+      padding: 12px 14px;
       background: var(--bg);
       font-size: 12px;
-      line-height: 1.8;
-      min-height: 120px;
+      line-height: 1.7;
+      min-height: 100px;
       border-radius: 2px;
+      flex: 1;
     }
     .summary-box .summary-category-list {
       display: flex;
       flex-wrap: wrap;
-      gap: 4px 8px;
+      gap: 4px 6px;
       margin-top: 6px;
     }
     .summary-box .summary-category-list .cat-tag {
       font-size: 10px;
       font-family: var(--mono);
-      padding: 3px 8px;
+      padding: 2px 6px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 2px;
@@ -1255,6 +1345,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
+      flex-shrink: 0;
     }
     .summary-actions .btn-row {
       display: flex;
@@ -1267,7 +1358,7 @@
     .btn-action {
       background: var(--light-gray);
       border: 1px solid var(--border);
-      padding: 7px 6px;
+      padding: 6px;
       font-family: var(--mono);
       font-size: 9px;
       cursor: pointer;
@@ -1298,8 +1389,9 @@
       display: flex;
       justify-content: space-between;
       border-top: 1px solid var(--border);
-      padding-top: 8px;
+      padding-top: 6px;
       letter-spacing: 0.06em;
+      flex-shrink: 0;
     }
     .status-line .elearch-mark {
       opacity: 0.4;
@@ -1308,7 +1400,7 @@
     /* ===== Import modal ===== */
     .import-area {
       border: 2px dashed var(--border);
-      padding: 16px;
+      padding: 14px;
       text-align: center;
       cursor: pointer;
       font-family: var(--mono);
@@ -1343,6 +1435,45 @@
     .import-result.error {
       border-left: 3px solid #c0392b;
     }
+
+    /* ===== 桌面端聊天悬浮球 ===== */
+    .chat-toggle-btn {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--accent-warm);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      z-index: 70;
+      box-shadow: 0 4px 20px var(--accent-glow), 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .chat-toggle-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 6px 28px var(--accent-glow), 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+    .chat-toggle-btn:active {
+      transform: scale(0.94);
+    }
+    .chat-toggle-btn .ico-lg {
+      stroke-width: 1.8;
+      width: 22px;
+      height: 22px;
+    }
+
+    /* ===== 桌面端显示悬浮球 ===== */
+    @media (min-width: 769px) {
+      .chat-toggle-btn {
+        display: flex;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1353,7 +1484,7 @@
       <h1>
         <span class="title-main" id="titleDisplay">GLINT</span>
         <span class="title-sub">· 万物集</span>
-        <span class="brand-foot">/ 象库</span>
+        <span class="brand-foot">/ ELEARCH</span>
       </h1>
       <span class="index-tag">NO.06</span>
     </div>
@@ -1486,7 +1617,7 @@
     </div>
   </div>
 
-  <!-- ===== CHAT TOGGLE - 优化悬浮球 ===== -->
+  <!-- ===== CHAT TOGGLE (桌面悬浮球) ===== -->
   <button class="chat-toggle-btn" id="chatToggleBtn" title="人生数位助理">
     <svg class="ico-lg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
   </button>
@@ -1503,141 +1634,168 @@
   <!-- ===== MAIN CONTENT ===== -->
   <main class="container">
 
-    <!-- LEFT: Input -->
-    <section class="panel">
-      <div class="panel-header">
-        <span>// 01 记录</span>
-        <span class="crosshair">+</span>
-      </div>
-      <div class="input-section">
-        <div class="entry-guide">
-          <strong>今天，留下什么？</strong>
+    <!-- TAB 1: 记录 -->
+    <div class="tab-content active" data-tab="record">
+      <section class="panel">
+        <div class="panel-header">
+          <span>// 01 记录</span>
+          <span class="crosshair">+</span>
         </div>
-        
-        <div class="category-grid" id="categoryContainer">
-          <button class="cat-btn active" data-cat="目之所见">
-            <span class="cat-icon">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="1" y1="1" x2="4" y2="4" style="stroke-width:1.2;"/></svg>
-            </span>
-            <span class="cat-label">目之所见</span>
-          </button>
-          <button class="cat-btn" data-cat="耳之所闻">
-            <span class="cat-icon">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
-            </span>
-            <span class="cat-label">耳之所闻</span>
-          </button>
-          <button class="cat-btn" data-cat="身之所感">
-            <span class="cat-icon">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="12 8 12 12 14 14"/></svg>
-            </span>
-            <span class="cat-label">身之所感</span>
-          </button>
-          <button class="cat-btn" data-cat="心之所想">
-            <span class="cat-icon">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-            </span>
-            <span class="cat-label">心之所想</span>
-          </button>
-          <button class="cat-btn" data-cat="世间所遇">
-            <span class="cat-icon">
-              <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3"/><path d="M5 19v-2a7 7 0 0 1 14 0v2"/><path d="M5 13v-2a7 7 0 0 1 14 0v2"/><line x1="12" y1="10" x2="12" y2="16"/></svg>
-            </span>
-            <span class="cat-label">世间所遇</span>
-          </button>
-          <button class="cat-btn" data-cat="手中所藏">
-            <span class="cat-icon">
-              <svg class="ico" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-            </span>
-            <span class="cat-label">手中所藏</span>
-          </button>
-        </div>
-
-        <textarea id="recordInput" placeholder="今天看到了什么？"></textarea>
-
-        <div class="input-actions">
-          <span class="char-count" id="charCount">0</span>
-          <span class="save-feedback" id="saveFeedback">已存档</span>
-          <button class="btn-submit" id="saveBtn">存档 ⌘+↵</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- MIDDLE: Timeline -->
-    <section class="panel timeline-panel">
-      <div class="panel-header">
-        <span>// 02 时间线</span>
-        <span class="panel-count" id="timelineCount">0</span>
-      </div>
-      <div class="filter-bar" id="filterBar">
-        <span class="filter-item active" data-filter="ALL">全部</span>
-        <span class="filter-item" data-filter="目之所见">目之所见</span>
-        <span class="filter-item" data-filter="耳之所闻">耳之所闻</span>
-        <span class="filter-item" data-filter="身之所感">身之所感</span>
-        <span class="filter-item" data-filter="心之所想">心之所想</span>
-        <span class="filter-item" data-filter="世间所遇">世间所遇</span>
-        <span class="filter-item" data-filter="手中所藏">手中所藏</span>
-      </div>
-      <div class="search-bar">
-        <span class="search-icon">
-          <svg class="ico-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        </span>
-        <input type="text" id="searchInput" placeholder="搜索记录..." />
-        <button class="search-clear" id="searchClear">✕</button>
-      </div>
-      <ul class="records-list" id="recordsList"></ul>
-    </section>
-
-    <!-- RIGHT: Summary -->
-    <section class="panel summary-column">
-      <div class="panel-header">
-        <span>// 03 映射</span>
-        <span class="crosshair">+</span>
-      </div>
-      <div class="summary-tabs">
-        <button class="tab-btn active" data-period="day">日</button>
-        <button class="tab-btn" data-period="week">周</button>
-        <button class="tab-btn" data-period="month">月</button>
-      </div>
-      <div class="summary-content">
-        <div class="summary-stats" id="summaryStats">
-          <div class="summary-stat">
-            <div class="stat-number" id="statTotal">0</div>
-            <div class="stat-label">记录</div>
+        <div class="input-section">
+          <div class="entry-guide">
+            <strong>今天，留下什么？</strong>
           </div>
-          <div class="summary-stat">
-            <div class="stat-number" id="statToday">0</div>
-            <div class="stat-label">今日</div>
+          
+          <div class="category-grid" id="categoryContainer">
+            <button class="cat-btn active" data-cat="目之所见">
+              <span class="cat-icon">
+                <svg class="ico" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="1" y1="1" x2="4" y2="4" style="stroke-width:1.2;"/></svg>
+              </span>
+              <span class="cat-label">目之所见</span>
+            </button>
+            <button class="cat-btn" data-cat="耳之所闻">
+              <span class="cat-icon">
+                <svg class="ico" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+              </span>
+              <span class="cat-label">耳之所闻</span>
+            </button>
+            <button class="cat-btn" data-cat="身之所感">
+              <span class="cat-icon">
+                <svg class="ico" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="12 8 12 12 14 14"/></svg>
+              </span>
+              <span class="cat-label">身之所感</span>
+            </button>
+            <button class="cat-btn" data-cat="心之所想">
+              <span class="cat-icon">
+                <svg class="ico" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+              </span>
+              <span class="cat-label">心之所想</span>
+            </button>
+            <button class="cat-btn" data-cat="世间所遇">
+              <span class="cat-icon">
+                <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3"/><path d="M5 19v-2a7 7 0 0 1 14 0v2"/><path d="M5 13v-2a7 7 0 0 1 14 0v2"/><line x1="12" y1="10" x2="12" y2="16"/></svg>
+              </span>
+              <span class="cat-label">世间所遇</span>
+            </button>
+            <button class="cat-btn" data-cat="手中所藏">
+              <span class="cat-icon">
+                <svg class="ico" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              </span>
+              <span class="cat-label">手中所藏</span>
+            </button>
+          </div>
+
+          <textarea id="recordInput" placeholder="今天看到了什么？"></textarea>
+
+          <div class="input-actions">
+            <span class="char-count" id="charCount">0</span>
+            <span class="save-feedback" id="saveFeedback">已存档</span>
+            <button class="btn-submit" id="saveBtn">存档 ⌘+↵</button>
           </div>
         </div>
-        <div class="summary-box" id="summaryOutput">
-          <div style="color:var(--muted);font-size:11px;">选择时段，查看结构映射</div>
+      </section>
+    </div>
+
+    <!-- TAB 2: 时间线 -->
+    <div class="tab-content" data-tab="timeline">
+      <section class="panel timeline-panel">
+        <div class="panel-header">
+          <span>// 02 时间线</span>
+          <span class="panel-count" id="timelineCount">0</span>
         </div>
-        <div class="summary-actions">
-          <button class="btn-action" id="genSummaryBtn">生成摘要</button>
-          <div class="btn-row">
-            <button class="btn-action" id="quickDayBtn">今日</button>
-            <button class="btn-action" id="quickWeekBtn">本周</button>
-            <button class="btn-action" id="quickMonthBtn">本月</button>
+        <div class="filter-bar" id="filterBar">
+          <span class="filter-item active" data-filter="ALL">全部</span>
+          <span class="filter-item" data-filter="目之所见">目</span>
+          <span class="filter-item" data-filter="耳之所闻">耳</span>
+          <span class="filter-item" data-filter="身之所感">身</span>
+          <span class="filter-item" data-filter="心之所想">心</span>
+          <span class="filter-item" data-filter="世间所遇">遇</span>
+          <span class="filter-item" data-filter="手中所藏">藏</span>
+        </div>
+        <div class="search-bar">
+          <span class="search-icon">
+            <svg class="ico-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </span>
+          <input type="text" id="searchInput" placeholder="搜索记录..." />
+          <button class="search-clear" id="searchClear">✕</button>
+        </div>
+        <ul class="records-list" id="recordsList"></ul>
+      </section>
+    </div>
+
+    <!-- TAB 3: 映射 -->
+    <div class="tab-content" data-tab="summary">
+      <section class="panel summary-column">
+        <div class="panel-header">
+          <span>// 03 映射</span>
+          <span class="crosshair">+</span>
+        </div>
+        <div class="summary-tabs">
+          <button class="tab-btn active" data-period="day">日</button>
+          <button class="tab-btn" data-period="week">周</button>
+          <button class="tab-btn" data-period="month">月</button>
+        </div>
+        <div class="summary-content">
+          <div class="summary-stats" id="summaryStats">
+            <div class="summary-stat">
+              <div class="stat-number" id="statTotal">0</div>
+              <div class="stat-label">记录</div>
+            </div>
+            <div class="summary-stat">
+              <div class="stat-number" id="statToday">0</div>
+              <div class="stat-label">今日</div>
+            </div>
+          </div>
+          <div class="summary-box" id="summaryOutput">
+            <div style="color:var(--muted);font-size:11px;">选择时段，查看结构映射</div>
+          </div>
+          <div class="summary-actions">
+            <button class="btn-action" id="genSummaryBtn">生成摘要</button>
+            <div class="btn-row">
+              <button class="btn-action" id="quickDayBtn">今日</button>
+              <button class="btn-action" id="quickWeekBtn">本周</button>
+              <button class="btn-action" id="quickMonthBtn">本月</button>
+            </div>
+          </div>
+          <div class="status-line">
+            <span class="elearch-mark">ELEARCH · GLINT</span>
+            <span id="statusReady">READY</span>
           </div>
         </div>
-        <div class="status-line">
-          <span class="elearch-mark">ELEARCH · GLINT</span>
-          <span id="statusReady">READY</span>
-        </div>
-      </div>
-    </section>
+      </section>
+    </div>
 
   </main>
+
+  <!-- ===== 移动端底部导航栏 ===== -->
+  <nav class="mobile-tab-bar" id="mobileTabBar">
+    <button class="tab-item active" data-tab="record">
+      <svg class="ico-lg" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      <span class="tab-label">记录</span>
+    </button>
+    <button class="tab-item" data-tab="timeline">
+      <svg class="ico-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span class="tab-label">时间线</span>
+      <span class="tab-badge" id="mobileBadge">0</span>
+    </button>
+    <button class="tab-item" data-tab="summary">
+      <svg class="ico-lg" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      <span class="tab-label">映射</span>
+    </button>
+    <button class="tab-item" data-tab="chat">
+      <svg class="ico-lg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="tab-label">助理</span>
+    </button>
+  </nav>
 
   <script>
   (function() {
     'use strict';
 
-    const STORAGE_KEY = 'glint_records_v1';
-    const CONFIG_KEY = 'glint_config_v1';
+    var STORAGE_KEY = 'glint_records_v1';
+    var CONFIG_KEY = 'glint_config_v1';
 
-    const CATEGORY_ICONS = {
+    var CATEGORY_ICONS = {
       '目之所见': '<svg class="ico" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="1" y1="1" x2="4" y2="4" style="stroke-width:1.2;"/></svg>',
       '耳之所闻': '<svg class="ico" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>',
       '身之所感': '<svg class="ico" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="12 8 12 12 14 14"/></svg>',
@@ -1646,7 +1804,7 @@
       '手中所藏': '<svg class="ico" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>'
     };
 
-    const CATEGORY_PLACEHOLDERS = {
+    var CATEGORY_PLACEHOLDERS = {
       '目之所见': '今天看到了什么？',
       '耳之所闻': '今天听到了什么？',
       '身之所感': '今天身体有什么变化？',
@@ -1655,7 +1813,7 @@
       '手中所藏': '今天有什么东西值得留下？'
     };
 
-    const defaultConfig = {
+    var defaultConfig = {
       title: 'GLINT',
       wallpaper: 'wp-default',
       customWallpaper: '',
@@ -1680,6 +1838,7 @@
     var syncEnabled = false;
     var currentUser = null;
     var chatHistory = [];
+    var isMobile = window.innerWidth <= 768;
 
     function $(id) { return document.getElementById(id); }
 
@@ -1746,6 +1905,59 @@
     var dailyReminder = $('dailyReminder');
     var reminderClose = $('reminderClose');
 
+    var mobileBadge = $('mobileBadge');
+    var tabItems = document.querySelectorAll('.tab-item');
+    var tabContents = document.querySelectorAll('.tab-content');
+
+    // ===== 移动端 Tab 切换 =====
+    function switchTab(tabName) {
+      tabContents.forEach(function(el) {
+        el.classList.toggle('active', el.dataset.tab === tabName);
+      });
+      tabItems.forEach(function(el) {
+        el.classList.toggle('active', el.dataset.tab === tabName);
+      });
+      // 如果切换到 chat，打开聊天 overlay
+      if (tabName === 'chat') {
+        chatOverlay.classList.add('open');
+        if (chatInput) chatInput.focus();
+      } else {
+        chatOverlay.classList.remove('open');
+      }
+    }
+
+    tabItems.forEach(function(item) {
+      item.addEventListener('click', function(e) {
+        var tab = this.dataset.tab;
+        switchTab(tab);
+        e.preventDefault();
+      });
+    });
+
+    // 聊天关闭按钮
+    chatClose.addEventListener('click', function() {
+      chatOverlay.classList.remove('open');
+      // 如果当前是 chat tab，切换到记录 tab
+      var activeTab = document.querySelector('.tab-content.active');
+      if (activeTab && activeTab.dataset.tab === 'chat') {
+        switchTab('record');
+      }
+    });
+
+    // 桌面端悬浮球点击
+    chatToggleBtn.addEventListener('click', function() {
+      chatOverlay.classList.toggle('open');
+      if (chatOverlay.classList.contains('open')) {
+        chatInput.focus();
+      }
+    });
+
+    // ===== 窗口 resize 检测 =====
+    window.addEventListener('resize', function() {
+      isMobile = window.innerWidth <= 768;
+    });
+
+    // ===== 原有功能代码（保持不变） =====
     function escapeHTML(s) {
       var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
       return s.replace(/[&<>"']/g, function(m) { return map[m]; });
@@ -2079,6 +2291,7 @@
       showFeedback('已归档 ' + entry.timeFormatted);
       if (syncEnabled && currentUser) syncToCloud();
       checkDailyReminder();
+      updateMobileBadge();
     }
 
     function deleteRecord(id) {
@@ -2088,8 +2301,17 @@
       renderRecords();
       renderSummary();
       if (syncEnabled && currentUser) syncToCloud();
+      updateMobileBadge();
     }
     window.deleteRecord = deleteRecord;
+
+    function updateMobileBadge() {
+      if (mobileBadge) {
+        var count = records.length;
+        mobileBadge.textContent = count;
+        mobileBadge.style.display = count > 0 ? 'block' : 'none';
+      }
+    }
 
     function renderRecords() {
       var filtered = records;
@@ -2103,6 +2325,7 @@
 
       timelineCount.textContent = filtered.length;
       recordCountDisplay.textContent = records.length;
+      updateMobileBadge();
 
       if (filtered.length === 0) {
         recordsList.innerHTML = '<li class="empty-state">' +
@@ -2319,6 +2542,7 @@
           importResult.className = 'import-result show success';
           if (syncEnabled && currentUser) syncToCloud();
           showFeedback('已导入 ' + imported + ' 条');
+          updateMobileBadge();
         } catch (err) {
           importResult.textContent = '导入失败：' + err.message;
           importResult.className = 'import-result show error';
@@ -2425,12 +2649,6 @@
         sendChatMessage();
       }
     });
-
-    chatToggleBtn.addEventListener('click', function() {
-      chatOverlay.classList.toggle('open');
-      if (chatOverlay.classList.contains('open')) chatInput.focus();
-    });
-    chatClose.addEventListener('click', function() { chatOverlay.classList.remove('open'); });
 
     function checkDailyReminder() {
       var todayStr = getTodayStr();
@@ -2555,11 +2773,13 @@
       }
     });
 
+    // 启动挂载
     renderDate();
     applyConfig();
     renderRecords();
     renderSummary();
     recordInput.placeholder = CATEGORY_PLACEHOLDERS[currentCategory] || '记录下这一刻…';
+    updateMobileBadge();
 
     setTimeout(checkDailyReminder, 1500);
 
