@@ -73,12 +73,21 @@
       font-size: 14px;
       line-height: 1.6;
       min-height: 100vh;
+      min-height: 100svh;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
       transition: background-image 0.3s ease, background-color 0.3s ease;
       position: relative;
       -webkit-font-smoothing: antialiased;
-      padding-bottom: var(--tab-height);
+      padding-bottom: calc(var(--tab-height) + env(safe-area-inset-bottom, 0px));
+    }
+    html {
+      overscroll-behavior-y: none;
+      -webkit-text-size-adjust: 100%;
+    }
+    body {
+      overscroll-behavior-y: none;
     }
 
     body.wp-custom {
@@ -820,11 +829,14 @@
         display: none !important;
       }
       .daily-reminder {
-        bottom: calc(var(--tab-height) + 16px);
+        bottom: calc(var(--tab-height) + env(safe-area-inset-bottom, 0px) + 16px);
+      }
+      .chat-overlay {
+        top: calc(var(--header-height) + env(safe-area-inset-top, 0px));
       }
       header {
-        padding: 6px 12px;
-        min-height: 44px;
+        padding: calc(6px + env(safe-area-inset-top, 0px)) 12px 6px;
+        min-height: calc(44px + env(safe-area-inset-top, 0px));
       }
       .brand h1 {
         font-size: 13px;
@@ -844,9 +856,57 @@
       }
     }
 
+    /* ===== 移动端触屏适配：禁 hover 闪烁 / 输入框防 iOS 自动缩放 / 删除按钮常显 ===== */
+    @media (max-width: 768px) {
+      input,
+      textarea,
+      select {
+        font-size: 16px;
+      }
+      .record-item .record-delete {
+        opacity: 1;
+      }
+    }
+    @media (hover: none) {
+      .brand h1 .title-main:hover,
+      .header-btn:hover,
+      .setting-group .input-row .btn-sm:hover,
+      .setting-group .input-row .btn-sm.outline:hover,
+      .wp-option:hover,
+      .wp-upload-area:hover,
+      .settings-close:hover,
+      .auth-panel .btn-auth:hover,
+      .auth-panel .btn-action:hover,
+      .chat-header .chat-close:hover,
+      .chat-input-area button:hover,
+      .daily-reminder .reminder-close:hover,
+      .category-grid .cat-btn:hover,
+      .btn-submit:hover,
+      .filter-item:hover,
+      .search-bar .search-clear:hover,
+      .record-item:hover,
+      .record-item:hover .record-delete,
+      .btn-action:hover,
+      .btn-action.danger:hover,
+      .import-area:hover,
+      .chat-toggle-btn:hover {
+        background: none !important;
+        border-color: var(--border) !important;
+        color: inherit !important;
+        transform: none !important;
+        opacity: 1 !important;
+        box-shadow: none !important;
+      }
+    }
+
     /* ===== Tab Content ===== */
     .tab-content {
       animation: fadeIn 0.2s ease;
+    }
+    @media (max-width: 768px) {
+      .tab-content {
+        animation: none;
+      }
     }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(6px); }
@@ -859,7 +919,7 @@
       bottom: 0;
       left: 0;
       right: 0;
-      height: var(--tab-height);
+      height: calc(var(--tab-height) + env(safe-area-inset-bottom, 0px));
       background: var(--surface);
       border-top: 1px solid var(--border);
       display: none;
@@ -1966,6 +2026,10 @@
       tabItems.forEach(function(el) {
         el.classList.toggle('active', el.dataset.tab === tabName);
       });
+      // FIX: 移动端切换 tab 后回到顶部，避免页面停留在上一个 tab 的滚动位置造成跳动
+      if (window.innerWidth <= 768) {
+        window.scrollTo(0, 0);
+      }
       if (tabName === 'chat') {
         // FIX: 检查 Supabase 配置
         if (!config.sbUrl || !config.sbKey) {
@@ -2547,6 +2611,11 @@
         filtered = filtered.filter(function(r) { return r.content.toLowerCase().indexOf(q) !== -1; });
       }
 
+      // FIX: 保留列表滚动位置，避免同步/重建 DOM 时列表跳动
+      var prevScrollTop = recordsList.scrollTop;
+      var prevWinY = window.scrollY;
+      var prevPageH = document.documentElement.scrollHeight || 1;
+
       timelineCount.textContent = filtered.length;
       recordCountDisplay.textContent = records.length;
       updateMobileBadge();
@@ -2589,6 +2658,14 @@
       });
 
       recordsList.innerHTML = html;
+      recordsList.scrollTop = prevScrollTop;
+      // FIX: 移动端整页滚动时按比例保持页面位置，同步/重建不跳顶
+      var newPageH = document.documentElement.scrollHeight || 1;
+      if (prevPageH > 0 && newPageH > 0 && Math.abs(newPageH - prevPageH) < prevPageH * 0.5) {
+        window.scrollTo(0, Math.round(prevWinY * (newPageH / prevPageH)));
+      } else {
+        window.scrollTo(0, prevWinY);
+      }
     }
 
     recordsList.addEventListener('click', function(e) {
