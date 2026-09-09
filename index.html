@@ -5,8 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>GLINT · 万物集 / ELEARCH</title>
 
-  <!-- Supabase SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Supabase SDK：主源同步加载保证时序；主源失败时由备用 CDN 异步补救（移动端网络多变，避免单源不可达导致无法同步） -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.min.js"></script>
+  <script>
+    (function () {
+      var backups = [
+        'https://fastly.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.min.js',
+        'https://gcore.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.min.js',
+        'https://unpkg.com/@supabase/supabase-js@2.116.0/dist/umd/supabase.min.js'
+      ];
+      window.__ensureSupabaseSdk = function (cb) {
+        if (window.supabase && window.supabase.createClient) { if (cb) cb(true); return; }
+        var i = 0;
+        (function next() {
+          if (i >= backups.length) { if (cb) cb(false); return; }
+          var s = document.createElement('script');
+          s.src = backups[i++];
+          s.onload = function () {
+            if (window.supabase && window.supabase.createClient) { if (cb) cb(true); }
+            else next();
+          };
+          s.onerror = function () { next(); };
+          document.head.appendChild(s);
+        })();
+      };
+    })();
+  </script>
 
   <style>
     /* ===== CSS Variables ===== */
@@ -1558,10 +1582,15 @@
 
       <div class="setting-group">
         <label>❸ Supabase 同步</label>
-        <input type="text" id="sbUrl" placeholder="Supabase URL" />
-        <input type="text" id="sbKey" placeholder="Supabase anon/public key" style="margin-top:4px;" />
-        <input type="text" id="sbTable" placeholder="Table 名称" value="glint_records" style="margin-top:4px;" />
-        <div style="font-size:9px;color:var(--muted);margin-top:4px;font-family:var(--mono);">配置后启用云端同步与多设备登录</div>
+        <input type="text" id="sbUrl" placeholder="https://xxxx.supabase.co（Settings → API → Project URL）" />
+        <input type="text" id="sbKey" placeholder="anon public key（Settings → API → anon public）」" style="margin-top:4px;" />
+        <input type="text" id="sbTable" placeholder="Table 名称（默认 glint_records）" value="glint_records" style="margin-top:4px;" />
+        <div style="font-size:9px;color:var(--muted);margin-top:4px;font-family:var(--mono);">配置后启用云端同步与多设备登录。首次使用请先在 Supabase SQL Editor 执行下方“复制建表 SQL”创建表与 RLS 策略，否则同步会报错。</div>
+        <div class="input-row" style="margin-top:6px;">
+          <button class="btn-sm" id="copySqlBtn">复制建表 SQL</button>
+          <button class="btn-sm outline" id="syncCheckBtn">检测连接</button>
+        </div>
+        <div id="syncCheckResult" style="font-size:10px;color:var(--muted);margin-top:6px;font-family:var(--mono);white-space:pre-wrap;"></div>
       </div>
 
       <div class="setting-group">
@@ -1794,6 +1823,24 @@
     var STORAGE_KEY = 'glint_records_v1';
     var CONFIG_KEY = 'glint_config_v1';
 
+    // ===== 存储保护层：iOS 无痕模式 / 受限 WebView 下 localStorage 不可写，
+    // 直接调用会让应用启动即崩、配置无法保存（进而无法启用同步）。
+    // 统一改为 persist/load，不可写时自动降级为内存态（页面存活期间数据仍可用） =====
+    var storageOK = (function () {
+      try {
+        localStorage.setItem('__glint_probe__', '1');
+        localStorage.removeItem('__glint_probe__');
+        return true;
+      } catch (e) { return false; }
+    })();
+    function persist(key, val) {
+      if (storageOK) { try { localStorage.setItem(key, val); } catch (e) {} }
+    }
+    function load(key) {
+      if (!storageOK) return null;
+      try { return localStorage.getItem(key); } catch (e) { return null; }
+    }
+
     var CATEGORY_ICONS = {
       '目之所见': '<svg class="ico" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="1" y1="1" x2="4" y2="4" style="stroke-width:1.2;"/></svg>',
       '耳之所闻': '<svg class="ico" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>',
@@ -1825,16 +1872,19 @@
       aiPrompt: '你是一个冷峻的生活档案员。基于用户的碎片记录，用简洁、结构化、略带诗意的语言总结其近期状态。'
     };
 
-    var config = JSON.parse(localStorage.getItem(CONFIG_KEY) || JSON.stringify(defaultConfig));
+    var config = JSON.parse(load(CONFIG_KEY) || JSON.stringify(defaultConfig));
     for (var k in defaultConfig) { if (!(k in config)) config[k] = defaultConfig[k]; }
 
-    var records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    var records = JSON.parse(load(STORAGE_KEY) || '[]');
     var currentCategory = '目之所见';
     var currentFilter = 'ALL';
     var currentPeriod = 'day';
     var searchQuery = '';
     var supabase = null;
     var syncEnabled = false;
+    var copySqlBtn = $('copySqlBtn');
+    var syncCheckBtn = $('syncCheckBtn');
+    var syncCheckResult = $('syncCheckResult');
     var currentUser = null;
     var chatHistory = [];
     var isMobile = window.innerWidth <= 768;
@@ -2014,26 +2064,92 @@
       syncStatus.innerHTML = '<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;"></span> ' + label;
     }
 
-    // FIX: 改进 Supabase 初始化，确保配置正确加载
-    function initSupabase() {
+    // FIX: getSafeStorage —— iOS 无痕模式 / 受限 WebView 下 localStorage 不可写，
+    // supabase-js 的 auth 会话存储会抛错导致登录/刷新失败，这里降级为内存存储
+    function getSafeStorage() {
+      try {
+        localStorage.setItem('__glint_storage_probe__', '1');
+        localStorage.removeItem('__glint_storage_probe__');
+        return localStorage;
+      } catch (e) {
+        var mem = {};
+        return {
+          getItem: function (k) { return (k in mem) ? mem[k] : null; },
+          setItem: function (k, v) { mem[k] = String(v); },
+          removeItem: function (k) { delete mem[k]; }
+        };
+      }
+    }
+
+    function showSyncError(msg) {
+      if (syncCheckResult) {
+        syncCheckResult.textContent = msg;
+        syncCheckResult.style.color = '#d9534f';
+      }
+    }
+    function clearSyncError() {
+      if (syncCheckResult) {
+        syncCheckResult.textContent = '';
+        syncCheckResult.style.color = '';
+      }
+    }
+
+    // FIX: 初始化 Supabase —— SDK 就绪回调 + 实例复用 + pkce（移动端更稳）+ 无痕兼容
+    function initSupabase(cb) {
+      cb = cb || function () {};
       var url = config.sbUrl || sbUrl.value;
       var key = config.sbKey || sbKey.value;
-      
-      if (url && key) {
-        try {
-          supabase = window.supabase.createClient(url, key);
-          syncEnabled = true;
-          updateSyncStatusUI('online', '云端');
-          return true;
-        } catch (e) {
+      if (!url || !key) {
+        syncEnabled = false;
+        updateSyncStatusUI('offline', '本地');
+        clearSyncError();
+        cb(false);
+        return;
+      }
+      if (supabase && supabase._glintUrl === url && supabase._glintKey === key && syncEnabled) {
+        cb(true);
+        return;
+      }
+      clearSyncError();
+      window.__ensureSupabaseSdk(function (ok) {
+        if (!ok) {
           syncEnabled = false;
           updateSyncStatusUI('offline', '离线');
-          return false;
+          showSyncError('Supabase SDK 未能加载（网络受限？），请检查网络后重试');
+          cb(false);
+          return;
         }
-      }
-      syncEnabled = false;
-      updateSyncStatusUI('offline', '本地');
-      return false;
+        try {
+          var client = window.supabase.createClient(url, key, {
+            auth: {
+              flowType: 'pkce',
+              detectSessionInUrl: false,
+              storage: getSafeStorage(),
+              autoRefreshToken: true,
+              persistSession: true
+            }
+          });
+          client._glintUrl = url;
+          client._glintKey = key;
+          supabase = client;
+          syncEnabled = true;
+          updateSyncStatusUI('online', '云端');
+          checkAuthSession();
+          cb(true);
+        } catch (e) {
+          syncEnabled = false;
+          supabase = null;
+          updateSyncStatusUI('offline', '离线');
+          showSyncError('Supabase 初始化失败：' + (e.message || e));
+          cb(false);
+        }
+      });
+    }
+
+    function ensureSupabaseReady() {
+      return new Promise(function (resolve) {
+        initSupabase(function (ok) { resolve(ok); });
+      });
     }
 
     var authMode = 'login';
@@ -2064,8 +2180,8 @@
       var email = authEmail.value.trim();
       var password = authPassword.value.trim();
       
-      // FIX: 检查 Supabase 配置
-      if (!config.sbUrl || !config.sbKey) {
+      // FIX: 检查 Supabase 配置（未保存时回退到设置面板当前输入，方便无痕/首次配置场景）
+      if (!(config.sbUrl || sbUrl.value.trim()) || !(config.sbKey || sbKey.value.trim())) {
         authError.textContent = '请先在设置中配置 Supabase URL 和 Key';
         authError.classList.add('show');
         settingsOverlay.classList.add('open');
@@ -2088,9 +2204,8 @@
       authSubmitBtn.textContent = '处理中...';
 
       try {
-        if (!supabase) {
-          if (!initSupabase()) throw new Error('Supabase 初始化失败，请检查配置');
-        }
+        var ready = await ensureSupabaseReady();
+        if (!ready) throw new Error('Supabase 初始化失败，请检查配置');
 
         var result;
         if (authMode === 'login') {
@@ -2101,19 +2216,18 @@
 
         if (result.error) throw result.error;
 
-        if (authMode === 'register' && result.data.user) {
-          authError.textContent = '注册成功，请登录';
+        // 注册后若项目开启了邮箱确认（Supabase 默认开启），不会立即返回 session
+        if (authMode === 'register' && !result.data.session) {
+          authError.textContent = '注册成功！请查收确认邮件后登录';
           authError.classList.add('show');
           setAuthMode('login');
-          authSubmitBtn.disabled = false;
-          authSubmitBtn.textContent = '登录';
           return;
         }
 
-        if (result.data.user) {
-          currentUser = result.data.user;
+        if (result.data.session) {
+          currentUser = result.data.session.user;
           authOverlay.classList.remove('open');
-          authToggleBtn.innerHTML = '<svg class="ico-sm" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>' + currentUser.email.slice(0, 8) + '…</span>';
+          authToggleBtn.innerHTML = '<svg class="ico-sm" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>' + escapeHTML(currentUser.email).slice(0, 8) + '…</span>';
           updateSyncStatusUI('online', '已登录');
           await loadFromCloud();
           renderRecords();
@@ -2144,8 +2258,7 @@
         }
         return;
       }
-      // FIX: 检查 Supabase 配置
-      if (!config.sbUrl || !config.sbKey) {
+      if (!(config.sbUrl || sbUrl.value.trim()) || !(config.sbKey || sbKey.value.trim())) {
         alert('请先在设置中配置 Supabase 同步');
         settingsOverlay.classList.add('open');
         return;
@@ -2168,7 +2281,7 @@
         var sessionData = await supabase.auth.getSession();
         if (sessionData.data && sessionData.data.session && sessionData.data.session.user) {
           currentUser = sessionData.data.session.user;
-          authToggleBtn.innerHTML = '<svg class="ico-sm" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>' + currentUser.email.slice(0, 8) + '…</span>';
+          authToggleBtn.innerHTML = '<svg class="ico-sm" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>' + escapeHTML(currentUser.email).slice(0, 8) + '…</span>';
           updateSyncStatusUI('online', '已登录');
           await loadFromCloud();
           renderRecords();
@@ -2182,29 +2295,95 @@
       try {
         updateSyncStatusUI('syncing', '同步中');
         var table = config.sbTable || 'glint_records';
-        var recordsWithUser = records.map(function(r) { var newR = {}; for (var key in r) { newR[key] = r[key]; } newR.user_id = currentUser.id; return newR; });
-        var result = await supabase.from(table).upsert(recordsWithUser, { onConflict: 'id' });
-        if (result.error) throw result.error;
+
+        // 本地删除的补偿：先清云端对应记录，避免本地删了云端还留着
+        var pendingDeletes = JSON.parse(load('glint_pending_deletes') || '[]');
+        if (pendingDeletes.length > 0) {
+          var delRes = await supabase.from(table).delete().in('id', pendingDeletes);
+          if (delRes.error) throw delRes.error;
+          persist('glint_pending_deletes', '[]');
+          pendingDeletes = [];
+        }
+
+        // 增量上传：只把比云端新的记录 upsert，避免反复全量覆盖
+        var remoteRes = await supabase.from(table).select('id, updated_at').eq('user_id', currentUser.id);
+        if (remoteRes.error) throw remoteRes.error;
+        var remoteById = {};
+        (remoteRes.data || []).forEach(function (r) { remoteById[r.id] = r.updated_at; });
+
+        var dirty = records.filter(function (r) {
+          if (r.user_id && r.user_id !== currentUser.id) return false;
+          var ts = r.updated_at || r.timestamp;
+          return !remoteById[r.id] || new Date(ts) > new Date(remoteById[r.id]);
+        });
+
+        if (dirty.length > 0) {
+          var rows = dirty.map(function (r) {
+            var row = {};
+            for (var k in r) { if (r.hasOwnProperty(k)) row[k] = r[k]; }
+            row.user_id = currentUser.id;
+            row.updated_at = r.updated_at || r.timestamp;
+            return row;
+          });
+          var upRes = await supabase.from(table).upsert(rows, { onConflict: 'id' });
+          if (upRes.error) throw upRes.error;
+          dirty.forEach(function (r) { r.cloudSynced = true; });
+          persist(STORAGE_KEY, JSON.stringify(records));
+        }
         updateSyncStatusUI('online', '已同步');
       } catch (e) {
         updateSyncStatusUI('offline', '离线');
+        showSyncError('同步失败：' + (e.message || e));
       }
     }
 
+    // FIX: loadFromCloud —— 以 updated_at 做冲突合并（云端较新则以云端为准），
+    // 本地独有记录保留并打标待上传；不再简单“云端整表覆盖”
     async function loadFromCloud() {
       if (!syncEnabled || !supabase || !currentUser) return;
       try {
+        updateSyncStatusUI('syncing', '同步中');
         var table = config.sbTable || 'glint_records';
-        var result = await supabase.from(table).select('*').eq('user_id', currentUser.id).order('timestamp', { ascending: false });
+        var result = await supabase.from(table).select('*').eq('user_id', currentUser.id);
         if (result.error) throw result.error;
-        if (result.data && result.data.length > 0) {
-          var cloudIds = new Set(result.data.map(function(r) { return r.id; }));
-          var localOnly = records.filter(function(r) { return !cloudIds.has(r.id); });
-          records = result.data.concat(localOnly);
-          records.sort(function(a, b) { return new Date(b.timestamp) - new Date(a.timestamp); });
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-        }
-      } catch (e) {}
+
+        var cloud = result.data || [];
+        var cloudById = {};
+        cloud.forEach(function (r) { cloudById[r.id] = r; });
+
+        // 云端记录先进合并结果（时间新则覆盖本地同名旧记录）
+        var merged = [];
+        var seen = {};
+        cloud.forEach(function (r) {
+          var c = {};
+          for (var k in r) { if (r.hasOwnProperty(k)) c[k] = r[k]; }
+          c.updated_at = c.updated_at || c.timestamp;
+          c.cloudSynced = true;
+          merged.push(c);
+          seen[c.id] = true;
+        });
+
+        // 本地独有记录（含他人 user_id 的历史本地记录）保留
+        records.forEach(function (l) {
+          if (seen[l.id]) return;
+          var keep = {};
+          for (var k in l) { if (l.hasOwnProperty(k)) keep[k] = l[k]; }
+          keep.updated_at = keep.updated_at || keep.timestamp;
+          merged.push(keep);
+          seen[keep.id] = true;
+        });
+
+        merged.sort(function (a, b) { return new Date(b.timestamp) - new Date(a.timestamp); });
+        records = merged;
+        persist(STORAGE_KEY, JSON.stringify(records));
+        renderRecords();
+        renderSummary();
+        updateMobileBadge();
+        updateSyncStatusUI('online', '已同步');
+      } catch (e) {
+        updateSyncStatusUI('offline', '离线');
+        showSyncError('拉取云端失败：' + (e.message || e));
+      }
     }
 
     function applyWallpaper(wpClass, customDataUrl) {
@@ -2220,7 +2399,7 @@
       if (wpClass === 'wp-custom') {
         config.customWallpaper = customDataUrl || '';
       }
-      localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+      persist(CONFIG_KEY, JSON.stringify(config));
       document.querySelectorAll('.wp-option').forEach(function(el) {
         el.classList.toggle('active', el.dataset.wp === wpClass);
       });
@@ -2293,7 +2472,7 @@
       config.sbUrl = sbUrl.value.trim();
       config.sbKey = sbKey.value.trim();
       config.sbTable = sbTable.value.trim() || 'glint_records';
-      localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+      persist(CONFIG_KEY, JSON.stringify(config));
       
       // 重新应用配置并初始化 Supabase
       applyConfig();
@@ -2319,10 +2498,11 @@
         category: currentCategory,
         timestamp: now.toISOString(),
         timeFormatted: formatTime(now.toISOString()),
+        updated_at: now.toISOString(),
         user_id: currentUser ? currentUser.id : 'local'
       };
       records.unshift(entry);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+      persist(STORAGE_KEY, JSON.stringify(records));
       recordInput.value = '';
       charCount.textContent = '0';
       renderRecords();
@@ -2334,12 +2514,17 @@
     }
 
     function deleteRecord(id) {
-      if (!confirm('移出档案？')) return;
+      if (!confirm('移出档案（其他设备也会删除）？')) return;
       records = records.filter(function(r) { return r.id !== id; });
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+      persist(STORAGE_KEY, JSON.stringify(records));
       renderRecords();
       renderSummary();
-      if (syncEnabled && currentUser) syncToCloud();
+      if (syncEnabled && currentUser) {
+        var pendingDeletes = JSON.parse(load('glint_pending_deletes') || '[]');
+        if (pendingDeletes.indexOf(id) === -1) pendingDeletes.push(id);
+        persist('glint_pending_deletes', JSON.stringify(pendingDeletes));
+        syncToCloud();
+      }
       updateMobileBadge();
     }
     window.deleteRecord = deleteRecord;
@@ -2393,11 +2578,11 @@
           var icon = CATEGORY_ICONS[r.category] || CATEGORY_ICONS['目之所见'];
           html += '<div class="record-item">' +
             '<div class="record-meta">' +
-              '<span class="record-cat-icon" title="' + r.category + '">' + icon + '</span>' +
-              '<span class="record-time">' + r.timeFormatted + '</span>' +
+              '<span class="record-cat-icon" title="' + escapeHTML(r.category || '') + '">' + icon + '</span>' +
+              '<span class="record-time">' + escapeHTML(r.timeFormatted || '') + '</span>' +
             '</div>' +
             '<div class="record-content">' + escapeHTML(r.content) + '</div>' +
-            '<button class="record-delete" onclick="deleteRecord(\'' + r.id + '\')" title="销毁">✕</button>' +
+            '<button class="record-delete" data-id="' + escapeHTML(r.id) + '" title="销毁">✕</button>' +
           '</div>';
         });
         html += '</li>';
@@ -2405,6 +2590,16 @@
 
       recordsList.innerHTML = html;
     }
+
+    recordsList.addEventListener('click', function(e) {
+      var target = e.target;
+      while (target && target !== recordsList && !(target.classList && target.classList.contains('record-delete'))) {
+        target = target.parentNode;
+      }
+      if (target && target !== recordsList && target.classList && target.classList.contains('record-delete')) {
+        deleteRecord(target.getAttribute('data-id'));
+      }
+    });
 
     function renderSummary() {
       statTotal.textContent = records.length;
@@ -2431,7 +2626,7 @@
         var count = item[1];
         var pct = total > 0 ? Math.round((count / total) * 100) : 0;
         var icon = CATEGORY_ICONS[cat] || '';
-        catHtml += '<span class="cat-tag">' + icon + ' ' + cat + ' <span class="count">' + count + '</span> (' + pct + '%)</span>';
+        catHtml += '<span class="cat-tag">' + icon + ' ' + escapeHTML(cat) + ' <span class="count">' + count + '</span> (' + pct + '%)</span>';
       });
 
       var periodLabels = { day: '今日', week: '本周', month: '本月' };
@@ -2501,7 +2696,7 @@
       var recordPreview = '';
       var previewItems = periodRecords.slice(0, 3);
       previewItems.forEach(function(r) {
-        var content = r.content.slice(0, 36) + (r.content.length > 36 ? '…' : '');
+        var content = escapeHTML((r.content || '').slice(0, 36)) + ((r.content || '').length > 36 ? '…' : '');
         recordPreview += '· ' + content + '<br>';
       });
       if (periodRecords.length > 3) {
@@ -2539,8 +2734,9 @@
       var a = document.createElement('a');
       a.href = url;
       a.download = 'glint_export_' + getTodayStr() + '.json';
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      setTimeout(function() { URL.revokeObjectURL(url); document.body.removeChild(a); }, 1000);
       showFeedback('已导出 ' + records.length + ' 条');
     }
 
@@ -2566,6 +2762,8 @@
             }
             if (!r.timestamp) r.timestamp = new Date().toISOString();
             if (!r.timeFormatted) r.timeFormatted = formatTime(r.timestamp);
+            if (!r.updated_at) r.updated_at = r.timestamp || new Date().toISOString();
+            r.cloudSynced = false;
             if (!r.user_id) r.user_id = currentUser ? currentUser.id : 'local';
             records.push(r);
             existingIds.add(r.id);
@@ -2573,7 +2771,7 @@
           });
 
           records.sort(function(a, b) { return new Date(b.timestamp) - new Date(a.timestamp); });
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+          persist(STORAGE_KEY, JSON.stringify(records));
           renderRecords();
           renderSummary();
 
@@ -2619,6 +2817,9 @@
     async function sendChatMessage() {
       var msg = chatInput.value.trim();
       if (!msg) return;
+      // 清理上一条“请先配置 AI 服务”提示，避免堆叠
+      var oldHints = chatMessages.querySelectorAll('.config-hint');
+      for (var i = 0; i < oldHints.length; i++) oldHints[i].parentNode.removeChild(oldHints[i]);
       chatInput.value = '';
       chatInput.disabled = true;
       chatSendBtn.disabled = true;
@@ -2634,7 +2835,8 @@
         var model = config.aiModel || 'gpt-4o-mini';
 
         if (!endpoint || !key) {
-          updateChatMessage(placeholder, '请先在设置中配置 AI 服务。');
+          updateChatMessage(placeholder, '请先在设置中配置 AI 服务（右上角 ⚙️ → ❹ AI 接口，填写 Endpoint 与 Key）。');
+          placeholder.className += ' config-hint';
           return;
         }
 
@@ -2692,7 +2894,7 @@
     function checkDailyReminder() {
       var todayStr = getTodayStr();
       var todayRecords = records.filter(function(r) { return r.timestamp.indexOf(todayStr) === 0; });
-      var hasBeenShown = localStorage.getItem('glint_reminder_shown_' + todayStr);
+      var hasBeenShown = load('glint_reminder_shown_' + todayStr);
 
       if (todayRecords.length === 0 && !hasBeenShown) {
         dailyReminder.style.display = 'block';
@@ -2704,7 +2906,7 @@
     reminderClose.addEventListener('click', function() {
       dailyReminder.style.display = 'none';
       var todayStr = getTodayStr();
-      localStorage.setItem('glint_reminder_shown_' + todayStr, 'true');
+      persist('glint_reminder_shown_' + todayStr, 'true');
     });
 
     function renderDate() {
@@ -2807,7 +3009,7 @@
       var newTitle = prompt('修改主标题：', config.title);
       if (newTitle && newTitle.trim()) {
         config.title = newTitle.trim();
-        localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+        persist(CONFIG_KEY, JSON.stringify(config));
         applyConfig();
       }
     });
@@ -2821,6 +3023,92 @@
     updateMobileBadge();
 
     setTimeout(checkDailyReminder, 1500);
+
+    // ===== Supabase 首次接入辅助：建表 SQL 复制 + 连接检测 =====
+    var CREATE_SQL = [
+      '-- GLINT 云端表结构（在 Supabase SQL Editor 中执行一次；如已建旧表请先执行对应 DROP/ALTER 对齐字段）',
+      'create table if not exists public.glint_records (',
+      '  id text primary key,',
+      '  content text not null,',
+      '  category text not null default \'目之所见\',',
+      '  "timestamp" timestamptz not null default now(),',
+      '  "timeFormatted" text,',
+      '  "updated_at" timestamptz not null default now(),',
+      '  user_id uuid not null default auth.uid(),',
+      '  constraint glint_records_user_fk foreign key (user_id) references auth.users(id) on delete cascade',
+      ');',
+      '',
+      'alter table public.glint_records enable row level security;',
+      '',
+      'create policy "glint_select_own" on public.glint_records for select using (auth.uid() = user_id);',
+      'create policy "glint_insert_own" on public.glint_records for insert with check (auth.uid() = user_id);',
+      'create policy "glint_update_own" on public.glint_records for update using (auth.uid() = user_id);',
+      'create policy "glint_delete_own" on public.glint_records for delete using (auth.uid() = user_id);',
+      '',
+      'create index if not exists glint_records_user_time_idx on public.glint_records (user_id, "timestamp" desc);'
+    ].join('\n');  // eslint-disable-line quotes
+
+    if (copySqlBtn) {
+      copySqlBtn.addEventListener('click', function () {
+        var msg = '建表 SQL 已复制，请在 Supabase SQL Editor 执行';
+        function fallbackCopy() {
+          var ta = document.createElement('textarea');
+          ta.value = CREATE_SQL;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand('copy'); } catch (e2) {}
+          document.body.removeChild(ta);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(CREATE_SQL).then(function () { showFeedback(msg); }, fallbackCopy);
+        } else {
+          fallbackCopy();
+          showFeedback(msg);
+        }
+      });
+    }
+
+    if (syncCheckBtn) {
+      syncCheckBtn.addEventListener('click', function () {
+        var url = sbUrl.value.trim();
+        var key = sbKey.value.trim();
+        var table = sbTable.value.trim() || 'glint_records';
+        if (!url || !key) {
+          showSyncError('请先填写 Supabase URL 和 anon key');
+          return;
+        }
+        syncCheckResult.style.color = 'var(--muted)';
+        syncCheckResult.textContent = '检测中…';
+        window.__ensureSupabaseSdk(function (ok) {
+          if (!ok) { showSyncError('Supabase SDK 未能加载，请检查网络'); return; }
+          var probe;
+          try {
+            probe = window.supabase.createClient(url, key, {
+              auth: { flowType: 'pkce', detectSessionInUrl: false, storage: getSafeStorage() }
+            });
+          } catch (e) { showSyncError('创建客户端失败：' + (e.message || e)); return; }
+          probe.from(table).select('id').limit(1)
+            .then(function (r) {
+              if (r.error) {
+                var msg = String(r.error.message || '');
+                if (msg.indexOf('Could not find the table') !== -1 || msg.indexOf('relation') !== -1) {
+                  showSyncError('连接 OK，但表 "' + table + '" 不存在。\n请点击上方“复制建表 SQL”，在 Supabase SQL Editor 执行后重试。');
+                } else if (msg.indexOf('row-level security') !== -1 || msg.indexOf('permission denied') !== -1) {
+                  showSyncError('表存在但 RLS 策略拒绝访问。\n请执行上方“复制建表 SQL”中的 RLS 策略，并确认已登录。');
+                } else {
+                  showSyncError('检测失败：' + msg);
+                }
+                return;
+              }
+              syncCheckResult.style.color = '#3d9970';
+              syncCheckResult.textContent = '✔ 连接成功，表结构可用，可以开始同步了。';
+            })
+            .catch(function (err) { showSyncError('检测请求异常：' + (err.message || err)); });
+        });
+      });
+    }
 
     setInterval(function() {
       if (syncEnabled && currentUser) syncToCloud();
