@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>GLINT · 万物集 / 象库</title>
+  <title>GLINT · 万物集 / ELEARCH</title>
 
   <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1917,8 +1916,17 @@
       tabItems.forEach(function(el) {
         el.classList.toggle('active', el.dataset.tab === tabName);
       });
-      // 如果切换到 chat，打开聊天 overlay
       if (tabName === 'chat') {
+        // FIX: 检查 Supabase 配置
+        if (!config.sbUrl || !config.sbKey) {
+          chatOverlay.classList.add('open');
+          var msg = document.createElement('div');
+          msg.className = 'chat-msg assistant';
+          msg.innerHTML = '请先在设置中配置 Supabase 同步，才能使用云端功能。<span class="msg-time">点击右上角 ⚙️ 配置</span>';
+          chatMessages.appendChild(msg);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+          return;
+        }
         chatOverlay.classList.add('open');
         if (chatInput) chatInput.focus();
       } else {
@@ -1937,7 +1945,6 @@
     // 聊天关闭按钮
     chatClose.addEventListener('click', function() {
       chatOverlay.classList.remove('open');
-      // 如果当前是 chat tab，切换到记录 tab
       var activeTab = document.querySelector('.tab-content.active');
       if (activeTab && activeTab.dataset.tab === 'chat') {
         switchTab('record');
@@ -1957,7 +1964,7 @@
       isMobile = window.innerWidth <= 768;
     });
 
-    // ===== 原有功能代码（保持不变） =====
+    // ===== 原有功能代码 =====
     function escapeHTML(s) {
       var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
       return s.replace(/[&<>"']/g, function(m) { return map[m]; });
@@ -2007,10 +2014,14 @@
       syncStatus.innerHTML = '<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;"></span> ' + label;
     }
 
+    // FIX: 改进 Supabase 初始化，确保配置正确加载
     function initSupabase() {
-      if (config.sbUrl && config.sbKey) {
+      var url = config.sbUrl || sbUrl.value;
+      var key = config.sbKey || sbKey.value;
+      
+      if (url && key) {
         try {
-          supabase = window.supabase.createClient(config.sbUrl, config.sbKey);
+          supabase = window.supabase.createClient(url, key);
           syncEnabled = true;
           updateSyncStatusUI('online', '云端');
           return true;
@@ -2052,6 +2063,15 @@
     async function handleAuth() {
       var email = authEmail.value.trim();
       var password = authPassword.value.trim();
+      
+      // FIX: 检查 Supabase 配置
+      if (!config.sbUrl || !config.sbKey) {
+        authError.textContent = '请先在设置中配置 Supabase URL 和 Key';
+        authError.classList.add('show');
+        settingsOverlay.classList.add('open');
+        return;
+      }
+      
       if (!email || !password) {
         authError.textContent = '请填写邮箱和密码';
         authError.classList.add('show');
@@ -2069,7 +2089,7 @@
 
       try {
         if (!supabase) {
-          if (!initSupabase()) throw new Error('Supabase 未配置，请先在设置中填写 URL 和 Key');
+          if (!initSupabase()) throw new Error('Supabase 初始化失败，请检查配置');
         }
 
         var result;
@@ -2122,6 +2142,12 @@
           updateSyncStatusUI('offline', '本地');
           showFeedback('已退出');
         }
+        return;
+      }
+      // FIX: 检查 Supabase 配置
+      if (!config.sbUrl || !config.sbKey) {
+        alert('请先在设置中配置 Supabase 同步');
+        settingsOverlay.classList.add('open');
         return;
       }
       setAuthMode('login');
@@ -2232,6 +2258,7 @@
       });
     });
 
+    // FIX: 改进 applyConfig，确保配置正确加载并初始化 Supabase
     function applyConfig() {
       document.title = config.title + ' · 万物集 / ELEARCH';
       titleDisplay.textContent = config.title;
@@ -2251,10 +2278,12 @@
       sbKey.value = config.sbKey || '';
       sbTable.value = config.sbTable || 'glint_records';
 
+      // 强制重新初始化 Supabase
       initSupabase();
       checkAuthSession();
     }
 
+    // FIX: 保存配置后强制重新加载所有状态
     function saveConfig() {
       config.title = titleInput.value.trim() || 'GLINT';
       config.aiEndpoint = aiEndpoint.value.trim();
@@ -2265,9 +2294,19 @@
       config.sbKey = sbKey.value.trim();
       config.sbTable = sbTable.value.trim() || 'glint_records';
       localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+      
+      // 重新应用配置并初始化 Supabase
       applyConfig();
-      initSupabase();
-      if (syncEnabled && currentUser) syncToCloud();
+      
+      // 如果配置了 Supabase，重新检查会话
+      if (config.sbUrl && config.sbKey) {
+        initSupabase();
+        checkAuthSession();
+        showFeedback('配置已保存，同步已启用');
+      } else {
+        updateSyncStatusUI('offline', '本地');
+        showFeedback('配置已保存');
+      }
     }
 
     function saveRecord() {
