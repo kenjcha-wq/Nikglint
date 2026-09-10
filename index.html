@@ -38,29 +38,29 @@
        约束：类名/ID/CSS 变量名全部保留（HTML 内联与 JS 引用），仅重写样式值
        ============================================================ */
     :root {
-      --bg: #f3f5f9;
+      --bg: #ffffff;
       --surface: #ffffff;
-      --border: #e3e8f0;
-      --border-dark: #c8d2e0;
-      --text: #202a37;
-      --muted: #7c8aa0;
-      --light-gray: #eef2f7;
-      --accent: #4f6ef7;
-      --accent-dark: #3a56d4;
-      --accent-warm: #ff9f5a;
-      --accent-glow: rgba(79, 110, 247, 0.16);
-      --success: #2fa84f;
-      --danger: #d95757;
+      --border: #e8eaed;
+      --border-dark: #d4d8dd;
+      --text: #202124;
+      --muted: #5f6368;
+      --light-gray: #f1f3f4;
+      --accent: #1a73e8;
+      --accent-dark: #185abc;
+      --accent-warm: #f29900;
+      --accent-glow: rgba(26, 115, 232, 0.12);
+      --success: #188038;
+      --danger: #d93025;
       --mono: "SF Mono", "SFMono-Regular", ui-monospace, "Roboto Mono", "Cascadia Code", "PingFang SC", monospace;
       --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-      --wallpaper: #f3f5f9;
+      --wallpaper: #ffffff;
       --wallpaper-img: none;
       --tab-height: 60px;
       --header-height: 56px;
       --radius: 14px;
       --radius-sm: 10px;
-      --shadow-card: 0 1px 2px rgba(16, 32, 64, 0.04), 0 6px 18px rgba(16, 32, 64, 0.05);
-      --shadow-pop: 0 18px 50px rgba(10, 20, 40, 0.22);
+      --shadow-card: 0 1px 3px rgba(32, 33, 36, 0.06), 0 2px 10px rgba(32, 33, 36, 0.05);
+      --shadow-pop: 0 16px 44px rgba(32, 33, 36, 0.16);
     }
 
     /* ===== Reset ===== */
@@ -107,26 +107,26 @@
     }
     body.wp-white {
       --wallpaper: none;
-      background-color: #fbfcfe;
+      background-color: #ffffff;
     }
     body.wp-warm {
       --wallpaper: none;
-      background-color: #f7f2ea;
+      background-color: #faf7f2;
     }
     body.wp-dark {
       --wallpaper: none;
-      background-color: #0f1521;
+      background-color: #131620;
       color: #e7edf6;
-      --border: #26304a;
-      --border-dark: #3b4a6b;
-      --surface: #171f30;
-      --light-gray: #1f2a41;
+      --border: #262c3d;
+      --border-dark: #3b4560;
+      --surface: #1a1f2e;
+      --light-gray: #232a3d;
       --muted: #8fa0bb;
-      --bg: #0f1521;
-      --accent: #7b93ff;
-      --accent-dark: #5f7cfc;
-      --accent-warm: #ff9f5a;
-      --accent-glow: rgba(123, 147, 255, 0.2);
+      --bg: #131620;
+      --accent: #8ab4f8;
+      --accent-dark: #669df6;
+      --accent-warm: #f29900;
+      --accent-glow: rgba(138, 180, 248, 0.2);
       --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.3);
     }
     body.wp-paper {
@@ -134,8 +134,8 @@
       background-color: #eef1ea;
     }
     body.wp-grid {
-      --wallpaper: linear-gradient(rgba(16, 32, 64, 0.045) 1px, transparent 1px),
-                   linear-gradient(90deg, rgba(16, 32, 64, 0.045) 1px, transparent 1px);
+      --wallpaper: linear-gradient(rgba(32, 33, 36, 0.04) 1px, transparent 1px),
+                   linear-gradient(90deg, rgba(32, 33, 36, 0.04) 1px, transparent 1px);
       --wallpaper-size: 28px 28px;
     }
 
@@ -267,6 +267,7 @@
     }
     .header-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--light-gray); }
     .header-btn .ico-sm { width: 12px; height: 12px; }
+    .header-btn.icon-only { padding: 6px; width: 30px; height: 30px; justify-content: center; }
 
     /* ===== Overlay 修复 ===== */
     .auth-overlay, .settings-overlay { pointer-events: none; }
@@ -276,7 +277,7 @@
     .settings-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(16, 26, 45, 0.45);
+      background: rgba(32, 33, 36, 0.4);
       z-index: 100;
       display: none;
       justify-content: center;
@@ -392,7 +393,7 @@
     .wp-option .wp-label {
       position: relative;
       z-index: 1;
-      background: rgba(15, 21, 33, 0.55);
+      background: rgba(32, 33, 36, 0.5);
       color: #fff;
       padding: 2px 8px;
       border-radius: 999px;
@@ -439,7 +440,7 @@
     .auth-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(16, 26, 45, 0.5);
+      background: rgba(32, 33, 36, 0.45);
       z-index: 90;
       display: none;
       justify-content: center;
@@ -566,112 +567,119 @@
     }
     .nav-item .ico { width: 15px; height: 15px; }
 
-    /* ===== 首页对话框（记录/搜索/AI 对话） ===== */
-    .dialog-panel { padding: 0; border: none; background: none; box-shadow: none; }
-    .dialog-shell {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      box-shadow: var(--shadow-pop);
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-    }
-    .dialog-mode-switch {
-      display: flex;
-      gap: 4px;
-      padding: 4px;
-      background: var(--light-gray);
-      border-radius: 12px;
-      margin-bottom: 16px;
-    }
-    .dialog-mode-switch .d-mode {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 8px 10px;
+    /* ===== 首页：搜索引擎式（问候语 + 大对话框 + 小标签） ===== */
+    .panel.dialog-panel {
+      padding: 0;
       border: none;
       background: none;
-      border-radius: 9px;
-      font-family: var(--sans);
-      font-size: 13px;
-      font-weight: 500;
+      box-shadow: none;
+      overflow: visible;
+      height: auto;
+      justify-content: center;
+      align-items: center;
+      min-height: calc(100dvh - var(--header-height) - var(--tab-height) - 118px);
+    }
+    .hero-inner { width: 100%; max-width: 680px; }
+    .entry-guide.hero-guide {
+      text-align: center;
+      border: none;
+      padding: 0 0 22px;
+      margin: 0;
+    }
+    .entry-guide.hero-guide strong {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: var(--text);
+      margin: 0 0 10px;
+    }
+    .entry-guide.hero-guide .hero-sub {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.24em;
       color: var(--muted);
-      cursor: pointer;
-      transition: all 0.15s;
-      -webkit-tap-highlight-color: transparent;
     }
-    .dialog-mode-switch .d-mode .ico { width: 15px; height: 15px; }
-    .dialog-mode-switch .d-mode.active {
+    .dialog-shell {
+      max-width: 640px;
+      width: 100%;
+      margin: 0 auto;
       background: var(--surface);
-      color: var(--accent);
-      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
-      font-weight: 600;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 1px 6px rgba(32, 33, 36, 0.13);
+      padding: 14px 18px 16px;
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow 0.2s, border-color 0.2s;
     }
-    .dialog-pane { display: none; }
-    .dialog-pane.active { display: block; animation: fadeIn 0.2s ease; }
-
-    .dialog-input-wrap .entry-guide { text-align: center; margin-bottom: 12px; }
+    .dialog-shell:focus-within {
+      box-shadow: 0 1px 10px rgba(32, 33, 36, 0.2), 0 12px 32px rgba(32, 33, 36, 0.08);
+      border-color: var(--border-dark);
+    }
     .dialog-input-wrap textarea {
       width: 100%;
-      min-height: 96px;
+      min-height: 54px;
+      max-height: 180px;
       resize: vertical;
-      padding: 16px 18px;
-      border: 1.5px solid var(--border);
-      border-radius: 14px;
-      background: var(--bg);
+      padding: 8px 10px;
+      border: none;
+      border-radius: 12px;
+      background: transparent;
       font-family: var(--sans);
-      font-size: 16px;
+      font-size: 17px;
       line-height: 1.7;
       color: var(--text);
       outline: none;
       box-sizing: border-box;
-      transition: border-color 0.15s, box-shadow 0.15s;
     }
-    .dialog-input-wrap textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-glow); }
+    .dialog-input-wrap textarea:focus { border: none; box-shadow: none; background: transparent; }
     .dialog-input-wrap .input-actions {
       display: flex;
       align-items: center;
+      justify-content: flex-end;
       gap: 10px;
-      margin-top: 12px;
+      margin-top: 6px;
     }
 
-    .dialog-cats-label {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.1em;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin: 18px 0 8px;
-    }
+    .home-cats-wrap { max-width: 640px; margin: 14px auto 0; }
     .category-grid.home-cats {
-      grid-template-columns: repeat(6, 1fr);
-      gap: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
     }
     .home-cats .cat-btn {
-      flex-direction: column;
-      gap: 4px;
-      padding: 9px 4px;
-      border-radius: 10px;
+      flex-direction: row;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 999px;
       border: 1px solid var(--border);
       background: var(--surface);
       cursor: pointer;
       transition: all 0.15s;
+      flex: 0 0 auto;
     }
-    .home-cats .cat-btn .cat-icon { width: 22px; height: 22px; }
-    .home-cats .cat-btn .cat-label { font-size: 11px; font-weight: 500; color: var(--text); }
+    .home-cats .cat-btn .cat-icon { width: 15px; height: 15px; }
+    .home-cats .cat-btn .cat-icon .ico { width: 14px; height: 14px; }
+    .home-cats .cat-btn .cat-label { font-size: 12px; font-weight: 500; color: var(--text); }
     .home-cats .cat-btn:hover { border-color: var(--accent); color: var(--accent); }
     .home-cats .cat-btn.active {
       border-color: var(--accent);
       background: color-mix(in srgb, var(--accent) 8%, var(--surface));
       box-shadow: 0 0 0 1px var(--accent);
     }
+    .home-cats .cat-btn.active .cat-icon { color: var(--accent); }
     .home-cats .cat-btn.active .cat-label { color: var(--accent); }
 
-    /* 搜索模式 */
-    .home-searchbar { margin-bottom: 14px; }
+    /* 搜索页 / AI 对话页 */
+    .search-page-panel .search-bar { padding: 12px 16px; }
+    .search-page-panel .search-bar input { font-size: 16px; }
+    .search-page-panel .search-results-box { padding: 14px 16px; flex: 1; }
+    .ai-page-panel { min-height: 520px; }
+    .ai-page-panel .chat-session-bar { padding: 14px 16px 12px; }
+    .ai-page-panel .chat-messages { flex: 1; min-height: 320px; max-height: 62vh; }
+    .ai-page-panel .chat-input-area { padding: 12px 16px; }
+
     .search-results-box { min-height: 120px; }
     .search-results-box .search-res-group { margin-bottom: 16px; }
     .search-results-box .search-res-group-head {
@@ -731,19 +739,13 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .dialog-pane[data-pane="ai"] .chat-messages {
-      height: 40vh;
-      min-height: 220px;
-      max-height: 52vh;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
-      background: var(--bg);
+    .ai-page-panel .chat-messages {
+      flex: 1;
+      min-height: 320px;
+      max-height: 62vh;
     }
-    .dialog-pane[data-pane="ai"] .chat-input-area {
-      border: none;
-      padding: 12px 0 0;
-      padding-bottom: 0;
+    .ai-page-panel .chat-input-area {
+      padding: 12px 16px;
     }
 
     /* ===== 档案库（对话历史） ===== */
@@ -933,7 +935,6 @@
       .record-item .record-delete { opacity: 1; }
       .tab-content { display: none; }
       .tab-content.active { display: block; }
-      .category-grid.home-cats { grid-template-columns: repeat(3, 1fr); }
       header {
         padding: calc(8px + env(safe-area-inset-top, 0px)) 14px 8px;
         min-height: calc(48px + env(safe-area-inset-top, 0px));
@@ -942,8 +943,17 @@
       .brand h1 .title-sub { font-size: 12px; }
       .brand .brand-foot { display: none; }
       .brand .index-tag { display: none; }
+      header .date-stamp, header #recordCountDisplay { display: none; }
       .header-btn { padding: 5px 9px; font-size: 12px; }
+      .header-btn.icon-only { padding: 5px; width: 28px; height: 28px; }
       .header-meta { gap: 6px; }
+      .panel.dialog-panel { min-height: calc(100dvh - var(--header-height) - var(--tab-height) - 70px); }
+      .entry-guide.hero-guide strong { font-size: 24px; }
+      .entry-guide.hero-guide { padding: 0 0 18px; }
+      .dialog-shell { border-radius: 20px; padding: 12px 14px 14px; }
+      .dialog-input-wrap textarea { font-size: 16px; min-height: 48px; }
+      .home-cats .cat-btn { padding: 6px 12px; gap: 5px; }
+      .ai-page-panel { min-height: calc(100dvh - var(--header-height) - var(--tab-height) - 30px); }
       .daily-reminder { bottom: calc(var(--tab-height) + env(safe-area-inset-bottom, 0px) + 16px); }
     }
     @media (hover: none) {
@@ -1078,7 +1088,7 @@
       .panel {
         min-height: 320px;
         border-radius: 16px;
-        box-shadow: 0 1px 2px rgba(16, 32, 64, 0.04), 0 4px 14px rgba(16, 32, 64, 0.05);
+        box-shadow: 0 1px 2px rgba(32, 33, 36, 0.04), 0 4px 14px rgba(32, 33, 36, 0.05);
       }
     }
 
@@ -1162,7 +1172,7 @@
     .category-grid .cat-btn .cat-label { font-size: 12px; line-height: 1.3; font-weight: 500; }
     .category-grid .cat-btn.active {
       border-color: var(--accent);
-      background: rgba(79, 110, 247, 0.07);
+      background: rgba(26, 115, 232, 0.06);
       box-shadow: 0 0 0 1px var(--accent-glow);
     }
     .category-grid .cat-btn.active .cat-icon { color: var(--accent); }
@@ -1411,7 +1421,7 @@
       background: var(--surface);
       color: var(--accent);
       font-weight: 600;
-      box-shadow: 0 1px 4px rgba(16, 32, 64, 0.1);
+      box-shadow: 0 1px 4px rgba(32, 33, 36, 0.12);
       border: 1px solid var(--border);
     }
 
@@ -1557,6 +1567,12 @@
         <span class="sync-dot" style="display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;"></span> 本地
       </span>
       <span id="recordCountDisplay">0</span>
+      <button class="header-btn icon-only" id="searchHeaderBtn" title="搜索">
+        <svg class="ico-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <button class="header-btn icon-only" id="aiHeaderBtn" title="AI 对话">
+        <svg class="ico-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><polyline points="9 11 12 8 15 11 12 14"/></svg>
+      </button>
       <button class="header-btn" id="authToggleBtn">
         <svg class="ico-sm" viewBox="0 0 24 24"><path d="M21 2l-2 2m-1.5 1.5L14 9l-3 3-4-4-5 5 1.5 1.5M7 17l4 4 1-1-1-1 2-2-1-1 1-1"/></svg>
         <span>登录</span>
@@ -1698,33 +1714,16 @@
       </button>
     </nav>
 
-    <!-- VIEW 首页: 对话框（记录 / 搜索 / AI 对话） -->
+    <!-- VIEW 首页: 搜索引擎式（问候语 + 记录对话框 + 六小标签） -->
     <div class="tab-content active" data-tab="home">
-      <section class="panel dialog-panel">
-        <div class="dialog-shell">
-
-          <!-- 模式切换 -->
-          <div class="dialog-mode-switch" id="homeModeSwitch">
-            <button class="d-mode active" data-mode="record">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-              <span>记录</span>
-            </button>
-            <button class="d-mode" data-mode="search">
-              <svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <span>搜索</span>
-            </button>
-            <button class="d-mode" data-mode="ai">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              <span>AI 对话</span>
-            </button>
+      <section class="panel dialog-panel hero-home">
+        <div class="hero-inner">
+          <div class="entry-guide hero-guide">
+            <strong>今天，留下什么？</strong>
+            <span class="hero-sub">目 · 耳 · 身 · 心 · 遇 · 藏</span>
           </div>
-
-          <!-- 记录模式 -->
-          <div class="dialog-pane active" data-pane="record">
+          <div class="dialog-shell">
             <div class="dialog-input-wrap">
-              <div class="entry-guide">
-                <strong>今天，留下什么？</strong>
-              </div>
               <textarea id="recordInput" placeholder="今天看到了什么？"></textarea>
               <div class="input-actions">
                 <span class="char-count" id="charCount">0</span>
@@ -1732,7 +1731,8 @@
                 <button class="btn-submit" id="saveBtn">存档 ⌘+↵</button>
               </div>
             </div>
-            <div class="dialog-cats-label">选择主题</div>
+          </div>
+          <div class="home-cats-wrap">
             <div class="category-grid home-cats" id="categoryContainer">
               <button class="cat-btn active" data-cat="目之所见">
                 <span class="cat-icon">
@@ -1772,37 +1772,40 @@
               </button>
             </div>
           </div>
+        </div>
+      </section>
+    </div>
 
-          <!-- 搜索模式 -->
-          <div class="dialog-pane" data-pane="search">
-            <div class="search-bar home-searchbar">
-              <span class="search-icon">
-                <svg class="ico-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              </span>
-              <input type="text" id="searchInput" placeholder="搜索记录与对话…" />
-              <button class="search-clear" id="searchClear">✕</button>
-            </div>
-            <div class="search-results-box" id="homeSearchResults"></div>
+    <!-- VIEW 搜索: 记录 + 对话历史 联合搜索 -->
+    <div class="tab-content" data-tab="search">
+      <section class="panel search-page-panel">
+        <div class="search-bar page-searchbar">
+          <span class="search-icon">
+            <svg class="ico-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </span>
+          <input type="text" id="searchInput" placeholder="搜索记录与对话…" />
+          <button class="search-clear" id="searchClear">✕</button>
+        </div>
+        <div class="search-results-box" id="homeSearchResults"></div>
+      </section>
+    </div>
+
+    <!-- VIEW AI 对话 -->
+    <div class="tab-content" data-tab="ai">
+      <section class="panel ai-page-panel">
+        <div class="chat-session-bar">
+          <span class="ai-session-label" id="aiSessionLabel">新对话</span>
+          <button class="btn-sm outline" id="aiNewChatBtn">＋ 新对话</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-msg assistant">
+            我是你的人生档案员，要找什么档案，尽管说！
+            <span class="msg-time">你的每一条记录，都在这里安放</span>
           </div>
-
-          <!-- AI 对话模式 -->
-          <div class="dialog-pane" data-pane="ai">
-            <div class="chat-session-bar">
-              <span class="ai-session-label" id="aiSessionLabel">新对话</span>
-              <button class="btn-sm outline" id="aiNewChatBtn">＋ 新对话</button>
-            </div>
-            <div class="chat-messages" id="chatMessages">
-              <div class="chat-msg assistant">
-                我是你的人生档案员，要找什么档案，尽管说！
-                <span class="msg-time">你的每一条记录，都在这里安放</span>
-              </div>
-            </div>
-            <div class="chat-input-area">
-              <input type="text" id="chatInput" placeholder="询问关于你的记录..." />
-              <button id="chatSendBtn">发送</button>
-            </div>
-          </div>
-
+        </div>
+        <div class="chat-input-area">
+          <input type="text" id="chatInput" placeholder="询问关于你的记录..." />
+          <button id="chatSendBtn">发送</button>
         </div>
       </section>
     </div>
@@ -1884,6 +1887,10 @@
 
   <!-- ===== 移动端底部导航栏 ===== -->
   <nav class="mobile-tab-bar" id="mobileTabBar">
+    <button class="tab-item" data-tab="home">
+      <svg class="ico-lg" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="tab-label">首页</span>
+    </button>
     <button class="tab-item" data-tab="timeline">
       <svg class="ico-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       <span class="tab-label">时间线</span>
@@ -1944,7 +1951,7 @@
 
     var defaultConfig = {
       title: 'GLINT',
-      wallpaper: 'wp-default',
+      wallpaper: 'wp-white',
       customWallpaper: '',
       sbUrl: '',
       sbKey: '',
@@ -2048,19 +2055,23 @@
     var tabItems = document.querySelectorAll('.tab-item');
     var tabContents = document.querySelectorAll('.tab-content');
     var navItems = document.querySelectorAll('.nav-item');
-    var dModeBtns = document.querySelectorAll('.d-mode');
-    var dialogPanes = document.querySelectorAll('.dialog-pane');
+    var searchHeaderBtn = $('searchHeaderBtn');
+    var aiHeaderBtn = $('aiHeaderBtn');
 
     // ===== 视图切换（首页对话框 / 时间线 / 总结 / 档案库） =====
     function switchTab(tabName) {
       tabContents.forEach(function(el) {
         el.classList.toggle('active', el.dataset.tab === tabName);
       });
+      // 搜索 / AI 是首页派生的独立页签：底栏与顶部导航中保持"首页"高亮
+      var homeDerived = (tabName === 'search' || tabName === 'ai');
       tabItems.forEach(function(el) {
-        el.classList.toggle('active', el.dataset.tab === tabName);
+        el.classList.toggle('active', el.dataset.tab === tabName ||
+          (homeDerived && el.dataset.tab === 'home'));
       });
       navItems.forEach(function(el) {
-        el.classList.toggle('active', el.dataset.tab === tabName);
+        el.classList.toggle('active', el.dataset.tab === tabName ||
+          (homeDerived && el.dataset.tab === 'home'));
       });
       // 进入档案库时渲染对话历史
       if (tabName === 'archive') renderArchive();
@@ -2068,8 +2079,12 @@
       if (window.innerWidth <= 768) {
         window.scrollTo(0, 0);
       }
-      if (tabName === 'home' && document.querySelector('.dialog-pane[data-pane="ai"]').classList.contains('active')) {
-        if (chatInput) chatInput.focus();
+      // 进入搜索 / AI 页时自动聚焦输入框
+      if (tabName === 'search' && searchInput) {
+        setTimeout(function() { searchInput.focus(); }, 60);
+      }
+      if (tabName === 'ai' && chatInput) {
+        setTimeout(function() { chatInput.focus(); }, 60);
       }
     }
 
@@ -2088,7 +2103,7 @@
       });
     });
 
-    // 点击品牌标题回首页（底栏/顶栏均无首页按钮，顶栏外观保持不变）
+    // 点击品牌标题回首页
     var brandEl = document.querySelector('.brand');
     if (brandEl) {
       brandEl.addEventListener('click', function() {
@@ -2096,38 +2111,27 @@
       });
     }
 
-    // ===== 首页对话框：记录 / 搜索 / AI 对话 三模式切换 =====
-    function showHomeMode(mode) {
-      dModeBtns.forEach(function(el) {
-        el.classList.toggle('active', el.dataset.mode === mode);
+    // ===== 顶栏入口：搜索 / AI 对话（独立页签） =====
+    if (searchHeaderBtn) {
+      searchHeaderBtn.addEventListener('click', function() {
+        switchTab('search');
+        setTimeout(function() { if (searchInput) searchInput.focus(); }, 60);
       });
-      dialogPanes.forEach(function(el) {
-        el.classList.toggle('active', el.dataset.pane === mode);
-      });
-      if (mode === 'search' && searchInput) {
-        setTimeout(function() { searchInput.focus(); }, 60);
-      }
-      if (mode === 'ai' && chatInput) {
-        setTimeout(function() { chatInput.focus(); }, 60);
-      }
-      if (mode === 'record' && recordInput) {
-        setTimeout(function() { recordInput.focus(); }, 60);
-      }
     }
-    dModeBtns.forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        showHomeMode(this.dataset.mode);
+    if (aiHeaderBtn) {
+      aiHeaderBtn.addEventListener('click', function() {
+        switchTab('ai');
+        setTimeout(function() { if (chatInput) chatInput.focus(); }, 60);
       });
-    });
+    }
 
-    // 从档案库载入某个会话并进入 AI 对话模式
+    // 从档案库载入某个会话并进入 AI 对话页
     function loadChatSession(sessionId) {
       for (var i = 0; i < chatSessions.length; i++) {
         if (chatSessions[i].id === sessionId) {
           activeSessionId = sessionId;
           renderChatSession(chatSessions[i]);
-          switchTab('home');
-          showHomeMode('ai');
+          switchTab('ai');
           if (aiSessionLabel) aiSessionLabel.textContent = chatSessions[i].title || '对话';
           return;
         }
