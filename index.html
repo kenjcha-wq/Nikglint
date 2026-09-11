@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>GLINT · 万物集 / ELEARCH</title>
 
-  <!-- Supabase SDK：主源同步加载保证时序；主源失败时由备用 CDN 异步补救 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.min.js"></script>
   <script>
     (function () {
@@ -34,12 +33,11 @@
 
     <style>
     /* ============================================================
-       GLINT 视觉层（v4 · 私人搜索引擎 / 数字手账）
-       v4 调整：
-       - 加宽六分类与输入框之间的间距
-       - 移除输入框外框（dialog-shell 无边框，仅保留极淡阴影）
-       - 桌面端内容更舒展，导航移至右上角、去掉外框
-       - 修复换墙纸无反应
+       GLINT 视觉层（v6 · 搜索纯粹 / 助理全能）
+       v6 调整：
+       - 搜索无结果时，引导到档案助理（方案 A）
+       - 档案助理背景记录数提升至 120 条
+       - 搜索页新增“去问助理”按钮样式
        ============================================================ */
     :root {
       --bg: #f7f5f0;
@@ -594,7 +592,6 @@
       margin: 0;
     }
 
-    /* ===== 输入框：去除外框 ===== */
     .dialog-shell {
       max-width: 640px;
       width: 100%;
@@ -646,7 +643,6 @@
     .dialog-input-wrap textarea:focus { border: none; box-shadow: none; background: transparent; }
     .dialog-input-wrap textarea::placeholder { color: var(--muted); opacity: 0.55; }
 
-    /* ===== 六分类：与输入框之间加宽间距 ===== */
     .home-cats-wrap { max-width: 620px; margin: 48px auto 0; }
     .category-grid.home-cats {
       display: flex;
@@ -735,7 +731,50 @@
       color: var(--muted);
       flex-shrink: 0;
     }
-    .search-results-box .search-res-empty { color: var(--muted); font-size: 12px; text-align: center; padding: 32px 0; opacity: 0.7; }
+    .search-results-box .search-res-empty { color: var(--muted); font-size: 12px; text-align: center; padding: 32px 0 16px; opacity: 0.7; }
+
+    /* ===== v6 新增：搜索无结果时，引导到档案助理 ===== */
+    .search-results-box .ask-assistant-hint {
+      margin-top: 22px;
+      padding: 18px 18px 16px;
+      border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+      background: color-mix(in srgb, var(--accent) 4%, var(--surface));
+      border-radius: 14px;
+      text-align: center;
+      animation: fadeIn 0.3s ease;
+    }
+    .search-results-box .ask-assistant-hint .hint-text {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    .search-results-box .ask-assistant-hint .hint-text strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .search-results-box .ask-assistant-hint .hint-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 18px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-family: var(--sans);
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.18s, box-shadow 0.18s, transform 0.1s;
+    }
+    .search-results-box .ask-assistant-hint .hint-btn:hover {
+      background: var(--accent-dark);
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+    .search-results-box .ask-assistant-hint .hint-btn:active { transform: scale(0.97); }
+    .search-results-box .ask-assistant-hint .hint-btn .ico { width: 14px; height: 14px; stroke-width: 1.7; }
 
     .record-item.flash { animation: flashHighlight 1.6s ease-out; }
     @keyframes flashHighlight {
@@ -1014,7 +1053,9 @@
       .btn-action.danger:hover,
       .import-area:hover,
       .tab-btn:hover,
-      .nav-item:hover {
+      .nav-item:hover,
+      .search-results-box .ask-assistant-hint .hint-btn:hover,
+      .search-results-box .ask-assistant-hint .hint-btn:active {
         background: none !important;
         border-color: var(--border) !important;
         color: inherit !important;
@@ -1710,11 +1751,11 @@
       </div>
 
       <div class="setting-group">
-        <label>❹ AI 接口</label>
+        <label>❹ 档案助理 · AI 接口</label>
         <input type="text" id="aiEndpoint" placeholder="API Endpoint（如 https://api.deepseek.com 或完整地址 .../v1/chat/completions）" />
         <input type="password" id="aiKey" placeholder="API Key" style="margin-top:4px;" />
         <input type="text" id="aiModel" placeholder="Model" value="gpt-4o-mini" style="margin-top:4px;" />
-        <textarea id="aiPrompt" placeholder="System Prompt">你是一个冷峻的生活档案员。基于用户的碎片记录，用简洁、结构化、略带诗意的语言总结其近期状态。</textarea>
+        <textarea id="aiPrompt" placeholder="System Prompt">你是用户的私人档案助理，名叫 GLINT。你的职责有三方面：一是精确检索，帮用户找到其记录中提到的具体内容；二是归纳总结，基于多条记录回顾某段时间的状态、情绪或主题；三是自由聊天，像一位安静、可靠的朋友一样陪用户说话。回答时语气克制、温和、略带诗意，不堆砌辞藻，不主动说教。当用户询问与记录相关的内容时，优先基于真实记录回答，并尽量引用原始语句；当用户只是想聊天时，自然回应即可。如果记录中没有相关信息，坦诚说明，不要编造。</textarea>
         <div style="font-size:9px;color:var(--muted);margin-top:6px;font-family:var(--mono);line-height:1.7;">
           填写规则：可只填服务商基础地址（如 https://api.deepseek.com），系统会自动补全 /v1/chat/completions；<br>
           也可直接填完整地址。常见服务商参考：<br>
@@ -1761,7 +1802,6 @@
   <!-- ===== MAIN CONTENT ===== -->
   <main class="container">
 
-    <!-- 桌面端顶部导航（右上角、去掉外框） -->
     <nav class="desktop-nav" id="desktopNav">
       <button class="nav-item active" data-tab="home">
         <svg class="ico" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -1773,7 +1813,7 @@
       </button>
       <button class="nav-item" data-tab="ai">
         <svg class="ico" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><polyline points="9 11 12 8 15 11 12 14"/></svg>
-        <span>AI 对话</span>
+        <span>档案助理</span>
       </button>
       <button class="nav-item" data-tab="summary">
         <svg class="ico" viewBox="0 0 24 24"><line x1="3" y1="20" x2="21" y2="20"/><rect x="5" y="11" width="3.4" height="7"/><rect x="10.3" y="6" width="3.4" height="12"/><rect x="15.6" y="13" width="3.4" height="5"/></svg>
@@ -1863,7 +1903,7 @@
       </section>
     </div>
 
-    <!-- VIEW AI 对话 -->
+    <!-- VIEW 档案助理 -->
     <div class="tab-content" data-tab="ai">
       <section class="panel ai-page-panel">
         <div class="chat-session-bar">
@@ -1875,12 +1915,12 @@
         </div>
         <div class="chat-messages" id="chatMessages">
           <div class="chat-msg assistant">
-            我是你的人生档案员，要找什么档案，尽管说！
-            <span class="msg-time">你的每一条记录，都在这里安放</span>
+            我是你的档案助理，可以帮你检索记录，也可以陪你聊聊。
+            <span class="msg-time">想问什么，或是想说什么，都可以</span>
           </div>
         </div>
         <div class="chat-input-area">
-          <input type="text" id="chatInput" placeholder="询问关于你的记录..." />
+          <input type="text" id="chatInput" placeholder="检索档案，或随便聊聊…" />
           <button id="chatSendBtn">发送</button>
         </div>
       </section>
@@ -1977,7 +2017,7 @@
     </button>
     <button class="tab-item" data-tab="ai">
       <svg class="ico-lg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><polyline points="9 11 12 8 15 11 12 14"/></svg>
-      <span class="tab-label">AI 对话</span>
+      <span class="tab-label">档案助理</span>
     </button>
     <button class="tab-item" data-tab="summary">
       <svg class="ico-lg" viewBox="0 0 24 24"><line x1="3" y1="20" x2="21" y2="20"/><rect x="5" y="11" width="3.4" height="7"/><rect x="10.3" y="6" width="3.4" height="12"/><rect x="15.6" y="13" width="3.4" height="5"/></svg>
@@ -1991,6 +2031,7 @@
 
     var STORAGE_KEY = 'glint_records_v1';
     var CONFIG_KEY = 'glint_config_v1';
+    var ASSISTANT_RECORD_LIMIT = 300; // v6: 档案助理背景记录上限
 
     var storageOK = (function () {
       try {
@@ -2035,7 +2076,7 @@
       aiEndpoint: '',
       aiKey: '',
       aiModel: 'gpt-4o-mini',
-      aiPrompt: '你是一个冷峻的生活档案员。基于用户的碎片记录，用简洁、结构化、略带诗意的语言总结其近期状态。'
+      aiPrompt: '你是用户的私人档案助理，名叫 GLINT。你的职责有三方面：一是精确检索，帮用户找到其记录中提到的具体内容；二是归纳总结，基于多条记录回顾某段时间的状态、情绪或主题；三是自由聊天，像一位安静、可靠的朋友一样陪用户说话。回答时语气克制、温和、略带诗意，不堆砌辞藻，不主动说教。当用户询问与记录相关的内容时，优先基于真实记录回答，并尽量引用原始语句；当用户只是想聊天时，自然回应即可。如果记录中没有相关信息，坦诚说明，不要编造。'
     };
 
     var config = JSON.parse(load(CONFIG_KEY) || JSON.stringify(defaultConfig));
@@ -3058,7 +3099,7 @@
       if (!session.messages.length) {
         var welcome = document.createElement('div');
         welcome.className = 'chat-msg assistant';
-        welcome.innerHTML = '我是你的人生档案员，要找什么档案，尽管说！<span class="msg-time">你的每一条记录，都在这里安放</span>';
+        welcome.innerHTML = '我是你的档案助理，可以帮你检索记录，也可以陪你聊聊。<span class="msg-time">想问什么，或是想说什么，都可以</span>';
         chatMessages.appendChild(welcome);
       } else {
         session.messages.forEach(function(m) {
@@ -3091,7 +3132,7 @@
       if (!archiveList) return;
       if (archiveCount) archiveCount.textContent = chatSessions.length;
       if (!chatSessions.length) {
-        archiveList.innerHTML = '<div class="archive-empty">还没有对话。<br>回到首页，在「AI 对话」里问点什么吧。</div>';
+        archiveList.innerHTML = '<div class="archive-empty">还没有对话。<br>回到「档案助理」里问点什么吧。</div>';
         return;
       }
       var html = '';
@@ -3130,21 +3171,31 @@
       });
     }
 
-    // ===== AI Endpoint 规范化：兼容用户只填 base 或填完整路径 =====
     function normalizeAIEndpoint(raw) {
       if (!raw) return '';
-      var url = raw.trim().replace(/\/+$/, ''); // 去掉末尾斜杠
+      var url = raw.trim().replace(/\/+$/, '');
 
-      // 已经是完整的 chat/completions 地址，直接用
       if (/\/chat\/completions$/.test(url)) return url;
-      // 已经是 /v1 结尾，补 /chat/completions
       if (/\/v1$/.test(url)) return url + '/chat/completions';
-      // 智谱特殊：/api/paas/v4 结尾
       if (/\/api\/paas\/v4$/.test(url)) return url + '/chat/completions';
-      // 通义千问 compatible-mode 特殊
       if (/\/compatible-mode\/v1$/.test(url)) return url + '/chat/completions';
-      // 其他情况：默认补 /v1/chat/completions（覆盖 OpenAI 兼容服务）
       return url + '/v1/chat/completions';
+    }
+
+    // v6: 档案助理 —— 背景记录数提升至 120 条
+    function buildRecordContext() {
+      if (records.length === 0) {
+        return '用户目前还没有留下任何记录。如果用户问起记录相关内容，可以温和地提醒他先去首页记一笔。';
+      }
+      var recent = records.slice(0, ASSISTANT_RECORD_LIMIT);
+      var ctx = '以下是用户在万物集中留下的生活记录（按时间倒序，最多 ' + ASSISTANT_RECORD_LIMIT + ' 条），供你检索、回顾、归纳与总结：\n';
+      recent.forEach(function(r) {
+        var d = new Date(r.timestamp);
+        var dateStr = (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + formatTime(r.timestamp);
+        ctx += '· [' + (r.category || '未分类') + '] ' + dateStr + ' — ' + (r.content || '') + '\n';
+      });
+      ctx += '\n使用说明：当用户的问题与记录相关时，优先基于它们回答，并尽量引用原始语句；当用户只是想聊天时，忽略它们即可。如果记录中没有相关信息，坦诚说明，不要编造。';
+      return ctx;
     }
 
     async function sendChatMessage() {
@@ -3165,7 +3216,7 @@
 
       addChatMessage('user', msg);
 
-      var placeholder = addChatMessage('assistant', '正在检索你的档案...');
+      var placeholder = addChatMessage('assistant', '正在整理思路...');
 
       try {
         var endpoint = normalizeAIEndpoint(config.aiEndpoint);
@@ -3173,16 +3224,16 @@
         var model = config.aiModel || 'gpt-4o-mini';
 
         if (!endpoint || !key) {
-          updateChatMessage(placeholder, '请先在设置中配置 AI 服务（右上角 ⚙️ → ❹ AI 接口，填写 Endpoint 与 Key）。');
+          updateChatMessage(placeholder, '请先在设置中配置 AI 服务（右上角 ⚙️ → ❹ 档案助理 · AI 接口，填写 Endpoint 与 Key）。');
           placeholder.className += ' config-hint';
           return;
         }
 
         var systemPrompt = config.aiPrompt || defaultConfig.aiPrompt;
-        var contextPrompt = '当前已录入 ' + records.length + ' 条生活流水记录。用户提问：';
+        var recordContext = buildRecordContext();
 
         var messages = [
-          { role: 'system', content: systemPrompt + '\n\n' + contextPrompt }
+          { role: 'system', content: systemPrompt + '\n\n' + recordContext }
         ];
         var hist = session.messages;
         for (var i = Math.max(0, hist.length - 10); i < hist.length; i++) {
@@ -3198,7 +3249,7 @@
           body: JSON.stringify({
             model: model,
             messages: messages,
-            max_tokens: 600,
+            max_tokens: 800,
             temperature: 0.7
           })
         });
@@ -3314,6 +3365,7 @@
       });
     });
 
+    // ===== 搜索：纯粹的字面检索（方案 A：无结果时引导到档案助理） =====
     function renderHomeSearch() {
       if (!homeSearchResults) return;
       var q = searchQuery.trim();
@@ -3361,13 +3413,49 @@
         html += '</div>';
       }
       if (!hitRecords.length && !hitChats.length) {
-        html = '<div class="search-res-empty">没有找到与「' + escapeHTML(q) + '」相关的内容</div>';
+        // v6: 无结果 → 引导到档案助理
+        html = '<div class="search-res-empty">没有找到与「' + escapeHTML(q) + '」相关的内容</div>' +
+          '<div class="ask-assistant-hint">' +
+            '<div class="hint-text">' +
+              '搜索只做<strong>字面匹配</strong>，如果你问的是意思、感受或归纳，' +
+              '可以试试<strong>档案助理</strong>——它能理解你的话。' +
+            '</div>' +
+            '<button class="hint-btn" data-ask="' + escapeHTML(q) + '">' +
+              '<svg class="ico" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><polyline points="9 11 12 8 15 11 12 14"/></svg>' +
+              '<span>去问档案助理</span>' +
+            '</button>' +
+          '</div>';
       }
       homeSearchResults.innerHTML = html;
     }
 
     if (homeSearchResults) {
       homeSearchResults.addEventListener('click', function(e) {
+        // v6: 点击「去问档案助理」按钮
+        var askBtn = e.target.closest ? e.target.closest('[data-ask]') : null;
+        if (askBtn) {
+          var q = askBtn.getAttribute('data-ask') || '';
+          // 清空搜索框，避免残留
+          if (searchInput) searchInput.value = '';
+          searchQuery = '';
+          if (searchClear) searchClear.classList.remove('show');
+          renderHomeSearch();
+          // 跳到档案助理，并预填关键词
+          switchTab('ai');
+          setTimeout(function() {
+            if (chatInput) {
+              chatInput.value = q;
+              chatInput.focus();
+              // 光标移到末尾
+              var len = chatInput.value.length;
+              if (chatInput.setSelectionRange) {
+                chatInput.setSelectionRange(len, len);
+              }
+            }
+          }, 100);
+          return;
+        }
+
         var recEl = e.target.closest ? e.target.closest('[data-rec]') : null;
         if (recEl) {
           currentFilter = 'ALL';
