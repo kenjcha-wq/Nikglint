@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>GLINT · 万物集 / ELEARCH</title>
 
-  <!-- Supabase SDK：主源同步加载保证时序；主源失败时由备用 CDN 异步补救（移动端网络多变，避免单源不可达导致无法同步） -->
+  <!-- Supabase SDK：主源同步加载保证时序；主源失败时由备用 CDN 异步补救 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.min.js"></script>
   <script>
     (function () {
@@ -35,16 +35,13 @@
     <style>
     /* ============================================================
        GLINT 视觉层（v4 · 私人搜索引擎 / 数字手账）
-       约束：类名/ID/CSS 变量名全部保留（HTML 内联与 JS 引用），仅重写样式值
-       关键词：安静、克制、留白、呼吸感、长期使用
        v4 调整：
        - 加宽六分类与输入框之间的间距
        - 移除输入框外框（dialog-shell 无边框，仅保留极淡阴影）
        - 桌面端内容更舒展，导航移至右上角、去掉外框
-       - 修复换墙纸无反应（CSS 变量与 body 类切换逻辑）
+       - 修复换墙纸无反应
        ============================================================ */
     :root {
-      /* ===== 暖纸 · 墨黑：档案馆气质，更柔和 ===== */
       --bg: #f7f5f0;
       --surface: #fcfbf8;
       --surface-2: #f2efe8;
@@ -73,7 +70,6 @@
       --shadow-pop: 0 22px 56px rgba(31, 30, 28, 0.16);
     }
 
-    /* ===== Reset ===== */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -81,7 +77,6 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* ===== Body & Wallpaper ===== */
     body {
       background-color: var(--bg);
       background-image: var(--wallpaper);
@@ -151,13 +146,11 @@
       --wallpaper-size: 32px 32px;
     }
 
-    /* ===== Scrollbar ===== */
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-    /* ===== UI Line Icons ===== */
     .ico {
       display: inline-flex;
       align-items: center;
@@ -176,7 +169,6 @@
     .ico-lg { width: 22px; height: 22px; stroke-width: 1.6; }
     .ico-sm { width: 13px; height: 13px; stroke-width: 1.8; }
 
-    /* ===== Header ===== */
     header {
       background: color-mix(in srgb, var(--surface) 80%, transparent);
       border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
@@ -216,23 +208,6 @@
     }
     .brand h1 .title-main:hover { border-bottom-color: var(--accent); }
     .brand h1 .title-sub { font-weight: 400; color: var(--muted); font-size: 12px; letter-spacing: 0.06em; }
-    .brand .brand-foot {
-      font-family: var(--mono);
-      font-size: 9px;
-      color: var(--muted);
-      letter-spacing: 0.16em;
-      opacity: 0.55;
-    }
-    .brand .index-tag {
-      font-family: var(--mono);
-      font-size: 9px;
-      background: var(--light-gray);
-      padding: 2px 8px;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      border-radius: 999px;
-      letter-spacing: 0.08em;
-    }
 
     .header-meta {
       font-family: var(--mono);
@@ -282,11 +257,9 @@
     .header-btn .ico-sm { width: 16px; height: 16px; stroke-width: 1.5; }
     .header-btn.icon-only { padding: 7px; width: 34px; height: 34px; justify-content: center; }
 
-    /* ===== Overlay 修复 ===== */
     .auth-overlay, .settings-overlay { pointer-events: none; }
     .auth-overlay.open, .settings-overlay.open { pointer-events: auto; }
 
-    /* ===== Settings Overlay ===== */
     .settings-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -450,7 +423,6 @@
     }
     .settings-close:hover { background: var(--accent-dark); box-shadow: 0 4px 16px var(--accent-glow); }
 
-    /* ===== Auth Overlay ===== */
     .auth-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -544,7 +516,7 @@
     }
     .auth-panel .btn-action:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-    /* ===== 桌面顶部导航（移至右上角、去掉外框） ===== */
+    /* ===== 桌面顶部导航（右上角、去掉外框） ===== */
     .desktop-nav {
       display: none;
       margin-bottom: 16px;
@@ -582,7 +554,7 @@
     }
     .nav-item .ico { width: 15px; height: 15px; }
 
-    /* ===== 首页：搜索引擎式（问候语 + 大对话框 + 小标签） ===== */
+    /* ===== 首页：搜索引擎式 ===== */
     .panel.dialog-panel {
       padding: 0;
       border: none;
@@ -622,7 +594,7 @@
       margin: 0;
     }
 
-    /* ===== 输入框：去除外框，仅保留极淡阴影与聚焦光晕 ===== */
+    /* ===== 输入框：去除外框 ===== */
     .dialog-shell {
       max-width: 640px;
       width: 100%;
@@ -674,7 +646,7 @@
     .dialog-input-wrap textarea:focus { border: none; box-shadow: none; background: transparent; }
     .dialog-input-wrap textarea::placeholder { color: var(--muted); opacity: 0.55; }
 
-    /* ===== 六分类：与输入框之间加宽间距，去掉按钮外框感 ===== */
+    /* ===== 六分类：与输入框之间加宽间距 ===== */
     .home-cats-wrap { max-width: 620px; margin: 48px auto 0; }
     .category-grid.home-cats {
       display: flex;
@@ -721,7 +693,6 @@
     .hero-foot .save-feedback { display: none; color: var(--success); }
     .hero-foot .save-feedback.show { display: inline; }
 
-    /* 搜索页 / AI 对话页 */
     .search-page-panel .search-bar { padding: 14px 20px; }
     .search-page-panel .search-bar input { font-size: 16px; }
     .search-page-panel .search-results-box { padding: 18px 20px; flex: 1; }
@@ -766,14 +737,12 @@
     }
     .search-results-box .search-res-empty { color: var(--muted); font-size: 12px; text-align: center; padding: 32px 0; opacity: 0.7; }
 
-    /* 搜索跳转高亮 */
     .record-item.flash { animation: flashHighlight 1.6s ease-out; }
     @keyframes flashHighlight {
       0% { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
       100% { background: var(--surface); box-shadow: none; }
     }
 
-    /* AI 对话模式（首页内） */
     .chat-session-bar {
       display: flex;
       align-items: center;
@@ -799,7 +768,6 @@
       padding: 14px 20px;
     }
 
-    /* ===== 档案库（对话历史） ===== */
     .archive-list { display: flex; flex-direction: column; gap: 8px; }
     .archive-item {
       display: flex;
@@ -861,6 +829,7 @@
       font-size: 14px;
       line-height: 1.75;
       word-break: break-word;
+      white-space: pre-wrap;
     }
     .chat-msg.user {
       align-self: flex-end;
@@ -914,7 +883,6 @@
     }
     .chat-input-area button:hover { background: var(--accent-dark); }
 
-    /* ===== Daily Reminder ===== */
     .daily-reminder {
       position: fixed;
       bottom: calc(var(--tab-height) + 22px);
@@ -955,7 +923,6 @@
       to { opacity: 1; transform: scale(1) translateY(0); }
     }
 
-    /* ===== Main Layout ===== */
     .container {
       max-width: 1120px;
       width: 100%;
@@ -967,7 +934,6 @@
       padding-bottom: 14px;
     }
 
-    /* ===== 桌面端：内容更舒展，导航右上角、去外框 ===== */
     @media (min-width: 769px) {
       body { padding-bottom: 0; }
       .container {
@@ -982,7 +948,6 @@
       .mobile-tab-bar { display: none !important; }
       .daily-reminder { bottom: 32px; left: auto; right: 32px; transform: none; max-width: 360px; }
 
-      /* 桌面端首页更舒展 */
       .panel.dialog-panel {
         min-height: calc(100dvh - var(--header-height) - 160px);
       }
@@ -992,7 +957,6 @@
       .hero-foot { margin-top: 52px; }
     }
 
-    /* ===== 移动端单栏 + 触屏适配 ===== */
     @media (max-width: 768px) {
       input, textarea, select { font-size: 16px; }
       .record-item .record-delete { opacity: 1; }
@@ -1004,8 +968,6 @@
       }
       .brand h1 { font-size: 15px; }
       .brand h1 .title-sub { font-size: 12px; }
-      .brand .brand-foot { display: none; }
-      .brand .index-tag { display: none; }
       header .date-stamp, header #recordCountDisplay { display: none; }
       .header-btn { padding: 6px 10px; font-size: 12px; }
       .header-btn.icon-only { padding: 6px; width: 30px; height: 30px; }
@@ -1014,8 +976,6 @@
       .panel.dialog-panel { padding-bottom: 32px; }
       .ai-page-panel { min-height: calc(100dvh - var(--header-height) - var(--tab-height) - 30px); }
       .daily-reminder { bottom: calc(var(--tab-height) + env(safe-area-inset-bottom, 0px) + 18px); }
-
-      /* 移动端六分类间距也加宽 */
       .home-cats-wrap { margin-top: 32px; }
     }
     @media (hover: none) {
@@ -1066,7 +1026,6 @@
       .tab-item.active .ico-lg { stroke: var(--accent) !important; }
     }
 
-    /* ===== Tab Content ===== */
     .tab-content { animation: fadeIn 0.25s ease; }
     @media (max-width: 768px) { .tab-content { animation: none; } }
     @keyframes fadeIn {
@@ -1074,7 +1033,6 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ===== Mobile Tab Bar ===== */
     .mobile-tab-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -1134,7 +1092,6 @@
     }
     .tab-item .tab-label { font-size: 10px; letter-spacing: 0.04em; font-weight: 500; }
 
-    /* ===== Panel ===== */
     .panel {
       background: color-mix(in srgb, var(--surface) 90%, transparent);
       border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
@@ -1186,7 +1143,6 @@
       opacity: 0.7;
     }
 
-    /* ===== Left: Input ===== */
     .input-section { padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 16px; flex: 1; }
 
     .entry-guide {
@@ -1304,7 +1260,6 @@
     }
     .btn-submit.icon .ico { width: 17px; height: 17px; stroke-width: 1.8; }
 
-    /* ===== Middle: Timeline ===== */
     .timeline-panel { min-height: 320px; }
     .timeline-panel .records-list { flex: 1; overflow-y: auto; }
 
@@ -1471,7 +1426,6 @@
     }
     .empty-state .empty-icon .ico { width: 36px; height: 36px; stroke-width: 1.1; }
 
-    /* ===== Right: Summary ===== */
     .summary-column .summary-tabs {
       display: flex;
       border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
@@ -1591,7 +1545,6 @@
     }
     .status-line .elearch-mark { opacity: 0.35; }
 
-    /* ===== Import modal ===== */
     .import-area {
       border: 2px dashed color-mix(in srgb, var(--border) 70%, transparent);
       padding: 20px;
@@ -1622,12 +1575,10 @@
     .import-result.success { border-left: 3px solid var(--success); }
     .import-result.error { border-left: 3px solid var(--danger); }
 
-    /* ===== 新增：AI 会话操作区 / 档案库头部 ===== */
     .session-actions { display: flex; align-items: center; gap: 8px; }
     .archive-head { display: flex; align-items: center; gap: 12px; }
     .archive-title { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted); opacity: 0.7; }
 
-    /* ===== 三端首页统一（搜索引擎式）：字标 → 搜索框 → 六分类 ===== */
     .panel.dialog-panel { padding-top: 6px; }
     @media (max-width: 768px) {
       .hero-mark { font-size: 23px; letter-spacing: 0.34em; text-indent: 0.34em; margin: 0 0 22px; }
@@ -1635,7 +1586,6 @@
       .dialog-search-icon { padding-bottom: 13px; }
       .dialog-input-wrap textarea { font-size: 16px; padding: 13px 0; }
       .btn-submit.icon { width: 38px; height: 38px; margin-bottom: 4px; }
-      /* 六分类：两行三列的小胶囊，移动端不再挤 */
       .category-grid.home-cats {
         display: grid;
         grid-template-columns: repeat(3, auto);
@@ -1657,7 +1607,6 @@
       .hero-foot { margin-top: 30px; font-size: 9px; gap: 6px; }
       .brand h1 .title-sub { display: none; }
     }
-    /* 顶栏日期/计数已移至首页底部，移动端不再隐藏 */
     @media (max-width: 768px) {
       header .date-stamp, header #recordCountDisplay { display: inline; }
     }
@@ -1762,10 +1711,19 @@
 
       <div class="setting-group">
         <label>❹ AI 接口</label>
-        <input type="text" id="aiEndpoint" placeholder="API Endpoint" />
+        <input type="text" id="aiEndpoint" placeholder="API Endpoint（如 https://api.deepseek.com 或完整地址 .../v1/chat/completions）" />
         <input type="password" id="aiKey" placeholder="API Key" style="margin-top:4px;" />
         <input type="text" id="aiModel" placeholder="Model" value="gpt-4o-mini" style="margin-top:4px;" />
         <textarea id="aiPrompt" placeholder="System Prompt">你是一个冷峻的生活档案员。基于用户的碎片记录，用简洁、结构化、略带诗意的语言总结其近期状态。</textarea>
+        <div style="font-size:9px;color:var(--muted);margin-top:6px;font-family:var(--mono);line-height:1.7;">
+          填写规则：可只填服务商基础地址（如 https://api.deepseek.com），系统会自动补全 /v1/chat/completions；<br>
+          也可直接填完整地址。常见服务商参考：<br>
+          · OpenAI：https://api.openai.com/v1/chat/completions<br>
+          · DeepSeek：https://api.deepseek.com/v1/chat/completions<br>
+          · Kimi：https://api.moonshot.cn/v1/chat/completions<br>
+          · 通义：https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions<br>
+          · 智谱：https://open.bigmodel.cn/api/paas/v4/chat/completions
+        </div>
       </div>
 
       <div class="setting-group">
@@ -1791,8 +1749,6 @@
     </div>
   </div>
 
-  <!-- ===== CHAT OVERLAY 已并入首页 AI 模式，不再使用独立浮层 ===== -->
-
   <!-- ===== DAILY REMINDER ===== -->
   <div class="daily-reminder" id="dailyReminder">
     <div class="reminder-body">
@@ -1805,7 +1761,7 @@
   <!-- ===== MAIN CONTENT ===== -->
   <main class="container">
 
-    <!-- 桌面端顶部导航（移至右上角、去掉外框） -->
+    <!-- 桌面端顶部导航（右上角、去掉外框） -->
     <nav class="desktop-nav" id="desktopNav">
       <button class="nav-item active" data-tab="home">
         <svg class="ico" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -1825,7 +1781,7 @@
       </button>
     </nav>
 
-    <!-- VIEW 首页: 搜索引擎式（问候语 + 记录对话框 + 六小标签） -->
+    <!-- VIEW 首页 -->
     <div class="tab-content active" data-tab="home">
       <section class="panel dialog-panel hero-home">
         <div class="hero-inner">
@@ -1843,7 +1799,6 @@
           </div>
           <div class="home-cats-wrap">
             <div class="category-grid home-cats" id="categoryContainer">
-              <!-- 六分类 -->
               <button class="cat-btn active" data-cat="目之所见">
                 <span class="cat-icon">
                   <svg class="ico" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="1" y1="1" x2="4" y2="4" style="stroke-width:1.2;"/></svg>
@@ -1894,7 +1849,7 @@
       </section>
     </div>
 
-    <!-- VIEW 搜索: 记录 + 对话历史 联合搜索 -->
+    <!-- VIEW 搜索 -->
     <div class="tab-content" data-tab="search">
       <section class="panel search-page-panel">
         <div class="search-bar page-searchbar">
@@ -1993,7 +1948,7 @@
       </section>
     </div>
 
-    <!-- VIEW 档案库（对话历史） -->
+    <!-- VIEW 档案库 -->
     <div class="tab-content" data-tab="archive">
       <section class="panel archive-panel">
         <div class="panel-header">
@@ -2037,9 +1992,6 @@
     var STORAGE_KEY = 'glint_records_v1';
     var CONFIG_KEY = 'glint_config_v1';
 
-    // ===== 存储保护层：iOS 无痕模式 / 受限 WebView 下 localStorage 不可写，
-    // 直接调用会让应用启动即崩、配置无法保存（进而无法启用同步）。
-    // 统一改为 persist/load，不可写时自动降级为内存态（页面存活期间数据仍可用） =====
     var storageOK = (function () {
       try {
         localStorage.setItem('__glint_probe__', '1');
@@ -2100,7 +2052,6 @@
     var syncCheckBtn = $('syncCheckBtn');
     var syncCheckResult = $('syncCheckResult');
     var currentUser = null;
-    // 会话历史持久化（供首页 AI 模式 + 档案库共同使用）
     var CHAT_KEY = 'glint_chat_sessions_v1';
     var chatSessions = [];
     try { chatSessions = JSON.parse(load(CHAT_KEY) || '[]'); } catch (e) { chatSessions = []; }
@@ -2182,12 +2133,10 @@
     var navItems = document.querySelectorAll('.nav-item');
     var searchHeaderBtn = $('searchHeaderBtn');
 
-    // ===== 视图切换（首页对话框 / 时间线 / 总结 / 档案库） =====
     function switchTab(tabName) {
       tabContents.forEach(function(el) {
         el.classList.toggle('active', el.dataset.tab === tabName);
       });
-      // 搜索派生自首页；档案库（对话历史）派生自 AI 对话
       var homeDerived = (tabName === 'search');
       var aiDerived = (tabName === 'archive');
       tabItems.forEach(function(el) {
@@ -2200,13 +2149,10 @@
           (homeDerived && el.dataset.tab === 'home') ||
           (aiDerived && el.dataset.tab === 'ai'));
       });
-      // 进入档案库时渲染对话历史
       if (tabName === 'archive') renderArchive();
-      // FIX: 移动端切换 tab 后回到顶部，避免页面停留在上一个 tab 的滚动位置造成跳动
       if (window.innerWidth <= 768) {
         window.scrollTo(0, 0);
       }
-      // 进入搜索 / AI 页时自动聚焦输入框
       if (tabName === 'search' && searchInput) {
         setTimeout(function() { searchInput.focus(); }, 60);
       }
@@ -2230,7 +2176,6 @@
       });
     });
 
-    // 点击品牌标题回首页
     var brandEl = document.querySelector('.brand');
     if (brandEl) {
       brandEl.addEventListener('click', function() {
@@ -2238,14 +2183,12 @@
       });
     }
 
-    // ===== 顶栏入口：搜索 / AI 对话（独立页签） =====
     if (searchHeaderBtn) {
       searchHeaderBtn.addEventListener('click', function() {
         switchTab('search');
         setTimeout(function() { if (searchInput) searchInput.focus(); }, 60);
       });
     }
-    // 从档案库载入某个会话并进入 AI 对话页
     function loadChatSession(sessionId) {
       for (var i = 0; i < chatSessions.length; i++) {
         if (chatSessions[i].id === sessionId) {
@@ -2258,12 +2201,10 @@
       }
     }
 
-    // ===== 窗口 resize 检测 =====
     window.addEventListener('resize', function() {
       isMobile = window.innerWidth <= 768;
     });
 
-    // ===== 原有功能代码 =====
     function escapeHTML(s) {
       var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
       return s.replace(/[&<>"']/g, function(m) { return map[m]; });
@@ -2313,8 +2254,6 @@
       syncStatus.innerHTML = '<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;"></span> ' + label;
     }
 
-    // FIX: getSafeStorage —— iOS 无痕模式 / 受限 WebView 下 localStorage 不可写，
-    // supabase-js 的 auth 会话存储会抛错导致登录/刷新失败，这里降级为内存存储
     function getSafeStorage() {
       try {
         localStorage.setItem('__glint_storage_probe__', '1');
@@ -2343,7 +2282,6 @@
       }
     }
 
-    // FIX: 初始化 Supabase —— SDK 就绪回调 + 实例复用 + pkce（移动端更稳）+ 无痕兼容
     function initSupabase(cb) {
       cb = cb || function () {};
       var url = config.sbUrl || sbUrl.value;
@@ -2429,7 +2367,6 @@
       var email = authEmail.value.trim();
       var password = authPassword.value.trim();
       
-      // FIX: 检查 Supabase 配置（未保存时回退到设置面板当前输入，方便无痕/首次配置场景）
       if (!(config.sbUrl || sbUrl.value.trim()) || !(config.sbKey || sbKey.value.trim())) {
         authError.textContent = '请先在设置中配置 Supabase URL 和 Key';
         authError.classList.add('show');
@@ -2465,7 +2402,6 @@
 
         if (result.error) throw result.error;
 
-        // 注册后若项目开启了邮箱确认（Supabase 默认开启），不会立即返回 session
         if (authMode === 'register' && !result.data.session) {
           authError.textContent = '注册成功！请查收确认邮件后登录';
           authError.classList.add('show');
@@ -2502,7 +2438,7 @@
         if (confirm('确定要退出登录吗？本地数据不会丢失。')) {
           if (supabase) supabase.auth.signOut();
           currentUser = null;
-          window._authDismissed = false; // 退出后允许再次自动弹出登录引导
+          window._authDismissed = false;
           authToggleBtn.innerHTML = '<svg class="ico-sm" viewBox="0 0 24 24"><path d="M21 2l-2 2m-1.5 1.5L14 9l-3 3-4-4-5 5 1.5 1.5M7 17l4 4 1-1-1-1 2-2-1-1 1-1"/></svg><span>登录</span>';
           updateSyncStatusUI('offline', (config.sbUrl && config.sbKey) ? '未登录' : '本地');
           showFeedback('已退出');
@@ -2524,13 +2460,11 @@
     authGuestBtn.addEventListener('click', function() {
       authOverlay.classList.remove('open');
       currentUser = null;
-      window._authDismissed = true; // 用户主动选择本地使用后，不再自动弹登录面板
+      window._authDismissed = true;
       updateSyncStatusUI('offline', (config.sbUrl && config.sbKey) ? '未登录·本地' : '本地');
       showFeedback('仅本地使用，不会同步');
     });
 
-    // FIX: 强制注册登录——已配置 Supabase 但未登录时提示并自动弹出注册/登录面板；
-    // 未登录状态下云端读写均被 syncToCloud/loadFromCloud 的 currentUser 检查拦截，仅本地可用
     async function checkAuthSession() {
       if (!supabase) return;
       try {
@@ -2543,7 +2477,6 @@
           renderRecords();
           renderSummary();
         } else {
-          // 已配置 Supabase 但未登录
           currentUser = null;
           authToggleBtn.innerHTML = '<svg class="ico-sm" viewBox="0 0 24 24"><path d="M21 2l-2 2m-1.5 1.5L14 9l-3 3-4-4-5 5 1.5 1.5M7 17l4 4 1-1-1-1 2-2-1-1 1-1"/></svg><span>登录</span>';
           if (config.sbUrl && config.sbKey) {
@@ -2552,7 +2485,6 @@
             authEmail.value = '';
             authPassword.value = '';
             authError.classList.remove('show');
-            // 仅首次自动弹出：用户主动选择本地使用（游客）后不再反复打断
             if (!window._authDismissed) {
               authOverlay.classList.add('open');
             }
@@ -2561,7 +2493,6 @@
           }
         }
       } catch (e) {
-        // 会话检查异常（网络/存储受限等）：不阻断本地使用，仅标记离线
         currentUser = null;
         if (config.sbUrl && config.sbKey) updateSyncStatusUI('offline', '未登录');
       }
@@ -2573,7 +2504,6 @@
         updateSyncStatusUI('syncing', '同步中');
         var table = config.sbTable || 'glint_records';
 
-        // 本地删除的补偿：先清云端对应记录，避免本地删了云端还留着
         var pendingDeletes = JSON.parse(load('glint_pending_deletes') || '[]');
         if (pendingDeletes.length > 0) {
           var delRes = await supabase.from(table).delete().in('id', pendingDeletes);
@@ -2582,7 +2512,6 @@
           pendingDeletes = [];
         }
 
-        // 增量上传：只把比云端新的记录 upsert，避免反复全量覆盖
         var remoteRes = await supabase.from(table).select('id, updated_at').eq('user_id', currentUser.id);
         if (remoteRes.error) throw remoteRes.error;
         var remoteById = {};
@@ -2614,8 +2543,6 @@
       }
     }
 
-    // FIX: loadFromCloud —— 以 updated_at 做冲突合并（云端较新则以云端为准），
-    // 本地独有记录保留并打标待上传；不再简单“云端整表覆盖”
     async function loadFromCloud() {
       if (!syncEnabled || !supabase || !currentUser) return;
       try {
@@ -2628,7 +2555,6 @@
         var cloudById = {};
         cloud.forEach(function (r) { cloudById[r.id] = r; });
 
-        // 云端记录先进合并结果（时间新则覆盖本地同名旧记录）
         var merged = [];
         var seen = {};
         cloud.forEach(function (r) {
@@ -2640,7 +2566,6 @@
           seen[c.id] = true;
         });
 
-        // 本地独有记录（含他人 user_id 的历史本地记录）保留
         records.forEach(function (l) {
           if (seen[l.id]) return;
           var keep = {};
@@ -2663,9 +2588,7 @@
       }
     }
 
-    // ===== 换墙纸逻辑（修复无反应问题） =====
     function applyWallpaper(wpClass, customDataUrl) {
-      // 移除所有 wp- 开头的类
       var classes = document.body.className.split(' ').filter(function(c) { return c.indexOf('wp-') !== 0; });
       document.body.className = classes.join(' ');
 
@@ -2682,7 +2605,6 @@
       }
       persist(CONFIG_KEY, JSON.stringify(config));
 
-      // 更新预览选中状态
       document.querySelectorAll('.wp-option').forEach(function(el) {
         el.classList.toggle('active', el.dataset.wp === wpClass);
       });
@@ -2720,7 +2642,6 @@
       });
     });
 
-    // FIX: 改进 applyConfig，确保配置正确加载并初始化 Supabase
     function applyConfig() {
       document.title = config.title + ' · 万物集 / ELEARCH';
       titleDisplay.textContent = config.title;
@@ -2741,12 +2662,10 @@
       sbKey.value = config.sbKey || '';
       sbTable.value = config.sbTable || 'glint_records';
 
-      // 强制重新初始化 Supabase
       initSupabase();
       checkAuthSession();
     }
 
-    // FIX: 保存配置后强制重新加载所有状态
     function saveConfig() {
       config.title = titleInput.value.trim() || 'GLINT';
       config.aiEndpoint = aiEndpoint.value.trim();
@@ -2758,10 +2677,8 @@
       config.sbTable = sbTable.value.trim() || 'glint_records';
       persist(CONFIG_KEY, JSON.stringify(config));
       
-      // 重新应用配置并初始化 Supabase
       applyConfig();
       
-      // 如果配置了 Supabase，重新检查会话
       if (config.sbUrl && config.sbKey) {
         initSupabase();
         checkAuthSession();
@@ -2793,7 +2710,6 @@
       renderRecords();
       renderSummary();
       showFeedback('已归档 ' + entry.timeFormatted);
-      // 记完即入档：直接跳到时间线
       switchTab('timeline');
       if (syncEnabled && currentUser) syncToCloud();
       checkDailyReminder();
@@ -2834,7 +2750,6 @@
         filtered = filtered.filter(function(r) { return r.content.toLowerCase().indexOf(q) !== -1; });
       }
 
-      // FIX: 保留列表滚动位置，避免同步/重建 DOM 时列表跳动
       var prevScrollTop = recordsList.scrollTop;
       var prevWinY = window.scrollY;
       var prevPageH = document.documentElement.scrollHeight || 1;
@@ -2882,7 +2797,6 @@
 
       recordsList.innerHTML = html;
       recordsList.scrollTop = prevScrollTop;
-      // FIX: 移动端整页滚动时按比例保持页面位置，同步/重建不跳顶
       var newPageH = document.documentElement.scrollHeight || 1;
       if (prevPageH > 0 && newPageH > 0 && Math.abs(newPageH - prevPageH) < prevPageH * 0.5) {
         window.scrollTo(0, Math.round(prevWinY * (newPageH / prevPageH)));
@@ -3114,7 +3028,6 @@
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // ===== 会话持久化：首页 AI 模式 + 档案库共用 =====
     function saveChatSessions() {
       persist(CHAT_KEY, JSON.stringify(chatSessions));
     }
@@ -3165,7 +3078,6 @@
     if (aiNewChatBtn) {
       aiNewChatBtn.addEventListener('click', createNewChat);
     }
-    // AI 对话 ↔ 对话历史（档案库）互跳
     var aiHistoryBtn = $('aiHistoryBtn');
     if (aiHistoryBtn) {
       aiHistoryBtn.addEventListener('click', function() { switchTab('archive'); });
@@ -3175,7 +3087,6 @@
       archiveBackBtn.addEventListener('click', function() { switchTab('ai'); });
     }
 
-    // ===== 档案库渲染与交互 =====
     function renderArchive() {
       if (!archiveList) return;
       if (archiveCount) archiveCount.textContent = chatSessions.length;
@@ -3219,10 +3130,26 @@
       });
     }
 
+    // ===== AI Endpoint 规范化：兼容用户只填 base 或填完整路径 =====
+    function normalizeAIEndpoint(raw) {
+      if (!raw) return '';
+      var url = raw.trim().replace(/\/+$/, ''); // 去掉末尾斜杠
+
+      // 已经是完整的 chat/completions 地址，直接用
+      if (/\/chat\/completions$/.test(url)) return url;
+      // 已经是 /v1 结尾，补 /chat/completions
+      if (/\/v1$/.test(url)) return url + '/chat/completions';
+      // 智谱特殊：/api/paas/v4 结尾
+      if (/\/api\/paas\/v4$/.test(url)) return url + '/chat/completions';
+      // 通义千问 compatible-mode 特殊
+      if (/\/compatible-mode\/v1$/.test(url)) return url + '/chat/completions';
+      // 其他情况：默认补 /v1/chat/completions（覆盖 OpenAI 兼容服务）
+      return url + '/v1/chat/completions';
+    }
+
     async function sendChatMessage() {
       var msg = chatInput.value.trim();
       if (!msg) return;
-      // 清理上一条“请先配置 AI 服务”提示，避免堆叠
       var oldHints = chatMessages.querySelectorAll('.config-hint');
       for (var i = 0; i < oldHints.length; i++) oldHints[i].parentNode.removeChild(oldHints[i]);
       chatInput.value = '';
@@ -3241,7 +3168,7 @@
       var placeholder = addChatMessage('assistant', '正在检索你的档案...');
 
       try {
-        var endpoint = config.aiEndpoint;
+        var endpoint = normalizeAIEndpoint(config.aiEndpoint);
         var key = config.aiKey;
         var model = config.aiModel || 'gpt-4o-mini';
 
@@ -3278,7 +3205,7 @@
 
         if (!response.ok) {
           var errText = await response.text();
-          throw new Error('API 响应错误 (' + response.status + '): ' + errText.slice(0, 100));
+          throw new Error('API 响应错误 (' + response.status + '): ' + errText.slice(0, 200));
         }
 
         var data = await response.json();
@@ -3291,7 +3218,22 @@
         if (aiSessionLabel) aiSessionLabel.textContent = session.title;
 
       } catch (e) {
-        updateChatMessage(placeholder, '调取失败: ' + e.message);
+        var hint = '';
+        var errMsg = String(e.message || e);
+        if (errMsg.indexOf('404') !== -1) {
+          hint = '\n\n可能原因：\n' +
+                 '① Endpoint 不完整，请填到 .../v1/chat/completions；\n' +
+                 '② Model 名称写错；\n' +
+                 '③ 该服务商不支持 OpenAI 兼容格式。';
+        } else if (errMsg.indexOf('401') !== -1 || errMsg.indexOf('403') !== -1) {
+          hint = '\n\n可能原因：API Key 无效或权限不足。';
+        } else if (errMsg.indexOf('429') !== -1) {
+          hint = '\n\n可能原因：请求频率超限或余额不足。';
+        } else if (errMsg.indexOf('Failed to fetch') !== -1 || errMsg.indexOf('NetworkError') !== -1) {
+          hint = '\n\n可能原因：网络不通，或该 API 不允许浏览器直接跨域调用（CORS）。\n' +
+                 '可尝试换用支持浏览器直连的服务商，或通过后端代理。';
+        }
+        updateChatMessage(placeholder, '调取失败: ' + errMsg + hint);
       } finally {
         chatInput.disabled = false;
         chatSendBtn.disabled = false;
@@ -3341,7 +3283,6 @@
       });
     });
 
-    // 输入框随内容增高（上限 180px，超出滚动），保持搜索框形态
     function autoGrow(el) {
       if (!el) return;
       el.style.height = 'auto';
@@ -3357,7 +3298,6 @@
         saveRecord();
         return;
       }
-      // 单独回车即存档（Shift+回车换行），移动端软键盘同样可用
       if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
         e.preventDefault();
         saveRecord();
@@ -3374,7 +3314,6 @@
       });
     });
 
-    // ===== 首页搜索模式：记录 + 对话历史 联合搜索 =====
     function renderHomeSearch() {
       if (!homeSearchResults) return;
       var q = searchQuery.trim();
@@ -3431,7 +3370,6 @@
       homeSearchResults.addEventListener('click', function(e) {
         var recEl = e.target.closest ? e.target.closest('[data-rec]') : null;
         if (recEl) {
-          // 点击记录 → 跳到时间线并聚焦到该条
           currentFilter = 'ALL';
           document.querySelectorAll('.filter-item').forEach(function(f) {
             f.classList.toggle('active', f.dataset.filter === 'ALL');
@@ -3524,7 +3462,6 @@
       }
     });
 
-    // 启动挂载
     renderDate();
     applyConfig();
     renderRecords();
@@ -3535,7 +3472,6 @@
 
     setTimeout(checkDailyReminder, 1500);
 
-    // ===== Supabase 首次接入辅助：建表 SQL 复制 + 连接检测 =====
     var CREATE_SQL = [
       '-- GLINT 云端表结构（在 Supabase SQL Editor 中执行一次；如已建旧表请先执行对应 DROP/ALTER 对齐字段）',
       'create table if not exists public.glint_records (',
@@ -3557,7 +3493,7 @@
       'create policy "glint_delete_own" on public.glint_records for delete using (auth.uid() = user_id);',
       '',
       'create index if not exists glint_records_user_time_idx on public.glint_records (user_id, "timestamp" desc);'
-    ].join('\n');  // eslint-disable-line quotes
+    ].join('\n');
 
     if (copySqlBtn) {
       copySqlBtn.addEventListener('click', function () {
