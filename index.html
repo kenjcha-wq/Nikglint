@@ -2271,8 +2271,13 @@
       return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
 
+    function localDateOf(iso) {
+      var d = new Date(iso);
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
     function isToday(iso) {
-      return iso.indexOf(getTodayStr()) === 0;
+      return localDateOf(iso) === getTodayStr();
     }
 
     function generateId() {
@@ -3652,6 +3657,185 @@
     window.addEventListener('beforeunload', function() {
       if (syncEnabled && currentUser) syncToCloud();
     });
+
+    // ===== 象览（xianglan）能力申报：宿主注入 window.xianglan 时才注册；单独打开时整段跳过，不影响应用 =====
+    if (window.xianglan && typeof window.xianglan.register === 'function') {
+      var XL_CATS = Object.keys(CATEGORY_ICONS);
+      var XL_DEFAULT_CAT = currentCategory;
+      var XL_QUERY_LIMIT = 100;
+      var XL_EXPORT_LIMIT = 200;
+      var XL_EXPORT_MAX = 500;
+      var XL_CHAT_LIMIT = 10;
+      var XL_MSG_LIMIT = 30;
+      var XL_CLIENT_KEY = 'glint_xianglan_client_ids';
+      var XL_CAT_MSG = '分类必须是：' + XL_CATS.join('/');
+
+      function xlBrief(r) {
+        return { id: r.id, content: r.content, category: r.category, timestamp: r.timestamp, timeFormatted: r.timeFormatted };
+      }
+      function xlLimit(n, def, max) {
+        return (typeof n === 'number' && n > 0) ? Math.min(Math.floor(n), max) : def;
+      }
+      function xlNum(n, def) {
+        return (typeof n === 'number' && n > 0) ? Math.floor(n) : def;
+      }
+      function xlGetClientMap() {
+        try { return JSON.parse(load(XL_CLIENT_KEY) || '{}'); } catch (e) { return {}; }
+      }
+
+      window.xianglan.register({
+        description: 'GLINT 人生流水账：随手记录每天看到、听到、尝到、想到、遇到、收藏的内容，支持检索、统计与云端同步',
+        actions: {
+          query_records: {
+            description: '按条件查询流水记录（只读），全部参数可选，省略时返回最近 20 条',
+            params: {
+              keyword: { type: 'string', description: '内容关键词，模糊匹配，不区分大小写', required: false },
+              category: { type: 'string', description: '分类，六选一：目之所见/耳之所闻/身之所感/心之所想/世间所遇/手中所藏', required: false },
+              date: { type: 'string', description: '日期，格式 YYYY-MM-DD，只返回当天记录', required: false },
+              limit: { type: 'number', description: '返回条数，默认 20，最大 100', required: false }
+            },
+            run: async function (args) {
+              var a = args || {};
+              var list = records;
+              if (a.keyword) {
+                var q = String(a.keyword).toLowerCase();
+                list = list.filter(function (r) { return (r.content || '').toLowerCase().indexOf(q) !== -1; });
+              }
+              if (a.category) {
+                list = list.filter(function (r) { return r.category === a.category; });
+              }
+              if (a.date) {
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(String(a.date))) throw new Error('date 格式应为 YYYY-MM-DD');
+                list = list.filter(function (r) { return localDateOf(r.timestamp) === String(a.date); });
+              }
+              var limit = xlLimit(a.limit, 20, XL_QUERY_LIMIT);
+              var hit = list.slice(0, limit);
+              return { total: list.length, returned: hit.length, records: hit.map(xlBrief) };
+            }
+          },
+          get_stats: {
+            description: '返回流水统计（只读）：总条数、今日/近7天/近30天条数、六个分类各自数量与占比，不含记录内容',
+            params: {},
+            run: async function () {
+              var now = new Date();
+              var todayStr = getTodayStr();
+              var weekAgo = new Date(now);
+              weekAgo.setDate(weekAgo.getDate() - 7);
+              var monthAgo = new Date(now);
+              monthAgo.setMonth(monthAgo.getMonth() - 1);
+              var today = 0, week = 0, month = 0, catCount = {};
+              records.forEach(function (r) {
+                if (localDateOf(r.timestamp) === todayStr) today++;
+                var t = new Date(r.timestamp);
+                if (!isNaN(t.getTime())) {
+                  if (t >= weekAgo) week++;
+                  if (t >= monthAgo) month++;
+                }
+                catCount[r.category] = (catCount[r.category] || 0) + 1;
+              });
+              var total = records.length;
+              var categories = XL_CATS.map(function (c) {
+                var n = catCount[c] || 0;
+                return { category: c, count: n, pct: total > 0 ? Math.round((n / total) * 100) : 0 };
+              });
+              return { total: total, today: today, thisWeek: week, thisMonth: month, categories: categories };
+            }
+          },
+          export_all: {
+            description: '导出全部记录原文（只读，含 id/content/category/timestamp/timeFormatted/updated_at）。默认最多 200 条，超出会截断并在返回中注明总量',
+            params: {
+              limit: { type: 'number', description: '返回条数上限，默认 200，最大 500', required: false }
+            },
+            run: async function (args) {
+              var a = args || {};
+              var limit = xlLimit(a.limit, XL_EXPORT_LIMIT, XL_EXPORT_MAX);
+              var totalCount = records.length;
+              var out = records.slice(0, limit).map(function (r) {
+                return { id: r.id, content: r.content, category: r.category, timestamp: r.timestamp, timeFormatted: r.timeFormatted, updated_at: r.updated_at || '' };
+              });
+              var res = { totalCount: totalCount, returned: out.length, truncated: totalCount > out.length, records: out };
+              if (res.truncated) {
+                res.note = '已截断：共 ' + totalCount + ' 条记录，仅返回前 ' + out.length + ' 条；如需更多可传 limit';
+              }
+              return res;
+            }
+          },
+          get_chat_sessions: {
+            description: '列出与档案助理的历史对话（只读）。默认只返回会话标题/时间/消息数；显式传 withContent=true 才附带消息内容（每会话限量）',
+            params: {
+              withContent: { type: 'boolean', description: '是否附带消息内容，默认 false', required: false },
+              limit: { type: 'number', description: '返回会话数，默认 10，最大 50', required: false },
+              maxMessages: { type: 'number', description: 'withContent=true 时每会话最多返回消息条数，默认 30', required: false }
+            },
+            run: async function (args) {
+              var a = args || {};
+              var limit = xlLimit(a.limit, XL_CHAT_LIMIT, 50);
+              var maxMsgs = xlNum(a.maxMessages, XL_MSG_LIMIT);
+              var sessions = chatSessions.slice(0, limit).map(function (s) {
+                var msgs = s.messages || [];
+                var item = { id: s.id, title: s.title || '对话', time: s.createdAt || s.updatedAt || '', messageCount: msgs.length };
+                if (a.withContent === true) {
+                  item.messages = msgs.slice(0, maxMsgs).map(function (m) {
+                    return { role: m.role, content: m.content };
+                  });
+                }
+                return item;
+              });
+              return { returned: sessions.length, sessions: sessions };
+            }
+          },
+          add_record: {
+            description: '新增一条流水记录（写操作，可被用户在时间线手动删除）。时间戳由应用生成，不接受外部传入；分类六选一，不传时使用应用当前所选分类',
+            params: {
+              content: { type: 'string', description: '记录内容', required: true },
+              category: { type: 'string', description: '分类，六选一：目之所见/耳之所闻/身之所感/心之所想/世间所遇/手中所藏；不传则用应用当前所选分类', required: false },
+              clientId: { type: 'string', description: '可选幂等键：同一 clientId 重复调用不会重复新增，直接返回已存在记录', required: false }
+            },
+            run: async function (args) {
+              var a = args || {};
+              var content = String(a.content || '').trim();
+              if (!content) throw new Error('content 不能为空');
+              var cat = a.category ? String(a.category) : XL_DEFAULT_CAT;
+              if (XL_CATS.indexOf(cat) === -1) throw new Error(XL_CAT_MSG);
+              if (a.clientId) {
+                var map = xlGetClientMap();
+                var existId = map[String(a.clientId)];
+                if (existId) {
+                  for (var i = 0; i < records.length; i++) {
+                    if (records[i].id === existId) {
+                      return { duplicated: true, record: xlBrief(records[i]) };
+                    }
+                  }
+                }
+              }
+              if (!recordInput) throw new Error('页面输入框不可用，请确认应用已正常打开');
+              var beforeLen = records.length;
+              var origCat = currentCategory;
+              var draft = recordInput.value; // 用户未存档草稿，代记后原样还原，避免被静默清空
+              currentCategory = cat; // saveRecord() 按当前分类归档
+              try {
+                recordInput.value = content;
+                saveRecord();
+              } finally {
+                currentCategory = origCat;
+                recordInput.value = draft;
+                charCount.textContent = String(draft.length);
+                autoGrow(recordInput);
+              }
+              if (records.length !== beforeLen + 1) throw new Error('保存失败，请稍后重试');
+              var entry = records[0];
+              if (entry.content !== content) throw new Error('保存结果未能通过校验');
+              if (a.clientId) {
+                var m2 = xlGetClientMap();
+                m2[String(a.clientId)] = entry.id;
+                persist(XL_CLIENT_KEY, JSON.stringify(m2));
+              }
+              return { record: xlBrief(entry) };
+            }
+          }
+        }
+      });
+    }
 
   })();
   </script>
