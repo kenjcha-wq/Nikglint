@@ -1,0 +1,4066 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>GLINT · 万物集 / ELEARCH</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.min.js"></script>
+  <script>
+    (function () {
+      var backups = [
+        'https://fastly.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.min.js',
+        'https://gcore.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.min.js',
+        'https://unpkg.com/@supabase/supabase-js@2.116.0/dist/umd/supabase.min.js'
+      ];
+      window.__ensureSupabaseSdk = function (cb) {
+        if (window.supabase && window.supabase.createClient) { if (cb) cb(true); return; }
+        var i = 0;
+        (function next() {
+          if (i >= backups.length) { if (cb) cb(false); return; }
+          var s = document.createElement('script');
+          s.src = backups[i++];
+          s.onload = function () {
+            if (window.supabase && window.supabase.createClient) { if (cb) cb(true); }
+            else next();
+          };
+          s.onerror = function () { next(); };
+          document.head.appendChild(s);
+        })();
+      };
+    })();
+  </script>
+
+    <style>
+    /* ============================================================
+       GLINT 视觉层（v6 · 搜索纯粹 / 助理全能）
+       v6 调整：
+       - 搜索无结果时，引导到档案助理（方案 A）
+       - 档案助理背景记录数提升至 120 条
+       - 搜索页新增“去问助理”按钮样式
+       ============================================================ */
+    :root {
+      --bg: #f7f5f0;
+      --surface: #fcfbf8;
+      --surface-2: #f2efe8;
+      --border: #e8e4db;
+      --border-dark: #d2ccc0;
+      --text: #1e1d1b;
+      --muted: #8a8479;
+      --light-gray: #f0ede6;
+      --accent: #8a6f56;
+      --accent-dark: #6b543f;
+      --accent-warm: #a8815a;
+      --accent-glow: rgba(138, 111, 86, 0.10);
+      --success: #5a7a5e;
+      --danger: #a64134;
+      --mono: "SF Mono", "SFMono-Regular", ui-monospace, "Roboto Mono", "Cascadia Code", "PingFang SC", monospace;
+      --serif: "Noto Serif SC", "Songti SC", "Source Han Serif SC", "Source Han Serif CN", Georgia, "Times New Roman", serif;
+      --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      --wallpaper: none;
+      --wallpaper-img: none;
+      --wallpaper-size: 24px 24px;
+      --tab-height: 60px;
+      --header-height: 54px;
+      --radius: 16px;
+      --radius-sm: 12px;
+      --shadow-card: 0 1px 2px rgba(31, 30, 28, 0.03), 0 6px 22px rgba(31, 30, 28, 0.04);
+      --shadow-pop: 0 22px 56px rgba(31, 30, 28, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: var(--wallpaper);
+      background-size: var(--wallpaper-size, 24px 24px);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.65;
+      transition: background-image 0.3s ease, background-color 0.3s ease;
+      position: relative;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: calc(var(--tab-height) + env(safe-area-inset-bottom, 0px));
+      min-height: 100svh;
+      min-height: 100dvh;
+    }
+    html {
+      overscroll-behavior-y: none;
+      -webkit-text-size-adjust: 100%;
+    }
+    body {
+      overscroll-behavior-y: none;
+    }
+
+    body.wp-custom {
+      background-image: var(--wallpaper-img);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+    body.wp-default {
+      --wallpaper: radial-gradient(#d6d0c3 1px, transparent 1px);
+      --wallpaper-size: 26px 26px;
+    }
+    body.wp-white {
+      --wallpaper: none;
+      background-color: #fdfcf9;
+    }
+    body.wp-warm {
+      --wallpaper: none;
+      background-color: #f4efe7;
+    }
+    body.wp-dark {
+      --wallpaper: none;
+      background-color: #191713;
+      color: #e8e3d9;
+      --border: #2e2a23;
+      --border-dark: #453f35;
+      --surface: #211e19;
+      --surface-2: #2a2620;
+      --light-gray: #2a2620;
+      --muted: #97907f;
+      --text: #e8e3d9;
+      --bg: #191713;
+      --accent: #c19a6b;
+      --accent-dark: #d8b183;
+      --accent-warm: #c99a5f;
+      --accent-glow: rgba(193, 154, 107, 0.16);
+      --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+    body.wp-paper {
+      --wallpaper: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23a89b82' fill-opacity='0.12'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      background-color: #f1ece2;
+    }
+    body.wp-grid {
+      --wallpaper: linear-gradient(rgba(31, 30, 28, 0.035) 1px, transparent 1px),
+                   linear-gradient(90deg, rgba(31, 30, 28, 0.035) 1px, transparent 1px);
+      --wallpaper-size: 32px 32px;
+    }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    .ico {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      stroke-width: 1.7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      vertical-align: middle;
+      flex-shrink: 0;
+      pointer-events: none;
+    }
+    .ico-lg { width: 22px; height: 22px; stroke-width: 1.6; }
+    .ico-sm { width: 13px; height: 13px; stroke-width: 1.8; }
+
+    header {
+      background: color-mix(in srgb, var(--surface) 80%, transparent);
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+      padding: 10px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      min-height: var(--header-height);
+      flex-shrink: 0;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .brand { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; min-width: 0; }
+    .brand h1 {
+      font-family: var(--serif);
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .brand h1 .title-main {
+      cursor: pointer;
+      color: var(--text);
+      border-bottom: 2px solid transparent;
+      transition: border-color 0.2s;
+      background: linear-gradient(120deg, var(--accent), var(--accent-dark));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-fill-color: transparent;
+    }
+    .brand h1 .title-main:hover { border-bottom-color: var(--accent); }
+    .brand h1 .title-sub { font-weight: 400; color: var(--muted); font-size: 12px; letter-spacing: 0.06em; }
+
+    .header-meta {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .sync-status {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--mono);
+      color: var(--muted);
+      opacity: 0.8;
+    }
+    .sync-status .sync-dot { width: 5px !important; height: 5px !important; }
+    .sync-status.online { color: var(--success); }
+    .sync-status.offline { color: var(--muted); }
+    .sync-status.syncing { color: var(--accent-warm); }
+
+    .header-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      padding: 7px;
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--muted);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      line-height: 1;
+      white-space: nowrap;
+      transition: all 0.18s ease;
+    }
+    .header-btn:hover { background: var(--light-gray); color: var(--text); }
+    .header-btn .ico-sm { width: 16px; height: 16px; stroke-width: 1.5; }
+    .header-btn.icon-only { padding: 7px; width: 34px; height: 34px; justify-content: center; }
+
+    .auth-overlay, .settings-overlay { pointer-events: none; }
+    .auth-overlay.open, .settings-overlay.open { pointer-events: auto; }
+
+    .settings-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(32, 33, 36, 0.32);
+      z-index: 100;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .settings-overlay.open { display: flex; }
+
+    .settings-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      max-width: 560px;
+      width: 94%;
+      max-height: 86vh;
+      overflow-y: auto;
+      padding: 28px 30px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-pop);
+      animation: popIn 0.25s ease;
+    }
+    .settings-panel h2 {
+      font-family: var(--sans);
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+    }
+    .settings-panel h2 .ico { color: var(--accent); }
+
+    .setting-group { margin-bottom: 20px; }
+    .setting-group label {
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      display: block;
+      margin-bottom: 8px;
+      letter-spacing: 0.02em;
+    }
+    .setting-group input,
+    .setting-group select,
+    .setting-group textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      font-family: var(--sans);
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      border-radius: var(--radius-sm);
+      transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+    }
+    .setting-group input:focus,
+    .setting-group select:focus,
+    .setting-group textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+      background: var(--surface);
+    }
+    .setting-group textarea { height: 60px; resize: vertical; font-size: 13px; line-height: 1.6; }
+    .setting-group .input-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .setting-group .input-row .btn-sm {
+      padding: 9px 16px;
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .setting-group .input-row .btn-sm:hover { background: var(--accent-dark); box-shadow: 0 4px 14px var(--accent-glow); }
+    .setting-group .input-row .btn-sm.outline {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .setting-group .input-row .btn-sm.outline:hover { border-color: var(--accent); color: var(--accent); background: var(--light-gray); box-shadow: none; }
+
+    .wallpaper-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 8px; }
+    .wp-option {
+      aspect-ratio: 1;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      border-radius: 14px;
+      transition: border-color 0.2s, transform 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--sans);
+      position: relative;
+      overflow: hidden;
+    }
+    .wp-option.active { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .wp-option:hover { border-color: var(--text); transform: translateY(-1px); }
+    .wp-option .wp-preview-img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
+    .wp-option .wp-label {
+      position: relative;
+      z-index: 1;
+      background: rgba(32, 33, 36, 0.4);
+      color: #fff;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 9px;
+      backdrop-filter: blur(4px);
+    }
+    .wp-upload-area {
+      grid-column: span 2;
+      border: 2px dashed var(--border);
+      padding: 14px;
+      text-align: center;
+      cursor: pointer;
+      font-family: var(--sans);
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: var(--bg);
+      border-radius: 14px;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .wp-upload-area:hover { border-color: var(--accent); color: var(--text); }
+    .wp-upload-area input[type="file"] { display: none; }
+
+    .settings-close {
+      margin-top: 18px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      border-radius: var(--radius-sm);
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .settings-close:hover { background: var(--accent-dark); box-shadow: 0 4px 16px var(--accent-glow); }
+
+    .auth-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(32, 33, 36, 0.36);
+      z-index: 90;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .auth-overlay.open { display: flex; }
+
+    .auth-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      max-width: 400px;
+      width: 92%;
+      padding: 34px 30px 28px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-pop);
+      animation: popIn 0.25s ease;
+    }
+    .auth-panel h2 {
+      font-family: var(--sans);
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .auth-panel .auth-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+    .auth-panel input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      font-family: var(--sans);
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      border-radius: var(--radius-sm);
+      margin-bottom: 12px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .auth-panel input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .auth-panel .btn-auth {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      margin-top: 4px;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .auth-panel .btn-auth:hover { background: var(--accent-dark); box-shadow: 0 4px 14px var(--accent-glow); }
+    .auth-panel .auth-switch { text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted); }
+    .auth-panel .auth-switch a { color: var(--accent); cursor: pointer; font-weight: 500; text-decoration: none; }
+    .auth-panel .auth-switch a:hover { text-decoration: underline; }
+    .auth-panel .auth-error {
+      color: var(--danger);
+      font-size: 13px;
+      margin-bottom: 12px;
+      display: none;
+      background: rgba(217, 87, 87, 0.06);
+      border-radius: var(--radius-sm);
+      padding: 9px 12px;
+    }
+    .auth-panel .auth-error.show { display: block; }
+    .auth-panel .btn-action {
+      background: var(--light-gray);
+      border: 1px solid var(--border);
+      padding: 10px;
+      font-family: var(--sans);
+      font-size: 12px;
+      cursor: pointer;
+      text-align: center;
+      border-radius: var(--radius-sm);
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      width: 100%;
+      color: var(--text);
+    }
+    .auth-panel .btn-action:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ===== 桌面顶部导航（右上角、去掉外框） ===== */
+    .desktop-nav {
+      display: none;
+      margin-bottom: 16px;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      gap: 4px;
+      box-shadow: none;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 8px 16px;
+      border: none;
+      background: none;
+      border-radius: 999px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .nav-item:hover { color: var(--text); background: color-mix(in srgb, var(--text) 5%, transparent); }
+    .nav-item.active {
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      color: var(--accent);
+      font-weight: 600;
+      box-shadow: none;
+    }
+    .nav-item .ico { width: 15px; height: 15px; }
+
+    /* ===== 首页：搜索引擎式 ===== */
+    .panel.dialog-panel {
+      padding: 0;
+      border: none;
+      background: none;
+      box-shadow: none;
+      overflow: visible;
+      height: auto;
+      justify-content: center;
+      align-items: center;
+      min-height: calc(100dvh - var(--header-height) - var(--tab-height) - 80px);
+    }
+    .hero-inner { width: 100%; max-width: 680px; text-align: center; }
+    .hero-mark {
+      font-family: var(--serif);
+      font-size: 28px;
+      font-weight: 400;
+      letter-spacing: 0.44em;
+      text-indent: 0.44em;
+      color: var(--text);
+      margin: 0 0 28px;
+      opacity: 0.88;
+      user-select: none;
+    }
+    .entry-guide.hero-guide {
+      text-align: center;
+      border: none;
+      padding: 0 0 22px;
+      margin: 0;
+    }
+    .entry-guide.hero-guide strong {
+      display: block;
+      font-family: var(--serif);
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .dialog-shell {
+      max-width: 640px;
+      width: 100%;
+      margin: 0 auto;
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      border: none;
+      border-radius: 30px;
+      box-shadow: 0 1px 3px rgba(31, 30, 28, 0.03), 0 10px 34px rgba(31, 30, 28, 0.05);
+      padding: 8px 10px 8px 24px;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-end;
+      gap: 12px;
+      min-height: 60px;
+      transition: box-shadow 0.25s;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    .dialog-shell:focus-within {
+      box-shadow: 0 2px 8px rgba(31, 30, 28, 0.04), 0 22px 56px rgba(31, 30, 28, 0.09);
+    }
+    .dialog-search-icon {
+      display: inline-flex;
+      align-items: center;
+      color: var(--muted);
+      padding-bottom: 15px;
+      flex-shrink: 0;
+      opacity: 0.65;
+    }
+    .dialog-search-icon .ico { width: 18px; height: 18px; stroke-width: 1.5; }
+    .dialog-input-wrap { flex: 1; min-width: 0; }
+    .dialog-input-wrap textarea {
+      width: 100%;
+      min-height: 26px;
+      max-height: 200px;
+      resize: none;
+      overflow-y: auto;
+      padding: 14px 0;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.55;
+      color: var(--text);
+      outline: none;
+      box-sizing: border-box;
+    }
+    .dialog-input-wrap textarea:focus { border: none; box-shadow: none; background: transparent; }
+    .dialog-input-wrap textarea::placeholder { color: var(--muted); opacity: 0.55; }
+
+    .home-cats-wrap { max-width: 620px; margin: 48px auto 0; }
+    .category-grid.home-cats {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px 16px;
+    }
+    .home-cats .cat-btn {
+      flex-direction: row;
+      gap: 6px;
+      padding: 7px 16px;
+      border-radius: 999px;
+      border: none;
+      background: color-mix(in srgb, var(--text) 3.5%, transparent);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.22s ease;
+      flex: 0 0 auto;
+      opacity: 0.85;
+    }
+    .home-cats .cat-btn .cat-icon { width: 14px; height: 14px; }
+    .home-cats .cat-btn .cat-icon .ico { width: 13px; height: 13px; }
+    .home-cats .cat-btn .cat-label { font-size: 11.5px; font-weight: 450; color: var(--muted); letter-spacing: 0.03em; }
+    .home-cats .cat-btn:hover { background: color-mix(in srgb, var(--text) 7%, transparent); color: var(--accent); }
+    .home-cats .cat-btn.active {
+      background: color-mix(in srgb, var(--accent) 9%, transparent);
+      box-shadow: none;
+    }
+    .home-cats .cat-btn.active .cat-icon { color: var(--accent); }
+    .home-cats .cat-btn.active .cat-label { color: var(--accent); font-weight: 550; }
+    .hero-foot {
+      margin-top: 44px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      opacity: 0.6;
+    }
+    .hero-foot .hero-sep { opacity: 0.4; }
+    .hero-foot .save-feedback { display: none; color: var(--success); }
+    .hero-foot .save-feedback.show { display: inline; }
+
+    .search-page-panel .search-bar { padding: 14px 20px; }
+    .search-page-panel .search-bar input { font-size: 16px; }
+    .search-page-panel .search-results-box { padding: 18px 20px; flex: 1; }
+    .ai-page-panel { min-height: 520px; }
+    .ai-page-panel .chat-session-bar { padding: 16px 20px 14px; }
+    .ai-page-panel .chat-messages { flex: 1; min-height: 320px; max-height: 62vh; }
+    .ai-page-panel .chat-input-area { padding: 14px 20px; }
+
+    .search-results-box { min-height: 120px; }
+    .search-results-box .search-res-group { margin-bottom: 20px; }
+    .search-results-box .search-res-group-head {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+    .search-results-box .search-res-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+      border-radius: 12px;
+      background: var(--surface);
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: border-color 0.18s, background 0.18s;
+    }
+    .search-results-box .search-res-item:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 3%, var(--surface)); }
+    .search-results-box .search-res-time { font-family: var(--mono); font-size: 10px; color: var(--muted); flex-shrink: 0; }
+    .search-results-box .search-res-text { font-size: 13px; color: var(--text); line-height: 1.5; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .search-results-box .search-res-cat {
+      font-size: 10px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: var(--light-gray);
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .search-results-box .search-res-empty { color: var(--muted); font-size: 12px; text-align: center; padding: 32px 0 16px; opacity: 0.7; }
+
+    /* ===== v6 新增：搜索无结果时，引导到档案助理 ===== */
+    .search-results-box .ask-assistant-hint {
+      margin-top: 22px;
+      padding: 18px 18px 16px;
+      border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+      background: color-mix(in srgb, var(--accent) 4%, var(--surface));
+      border-radius: 14px;
+      text-align: center;
+      animation: fadeIn 0.3s ease;
+    }
+    .search-results-box .ask-assistant-hint .hint-text {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    .search-results-box .ask-assistant-hint .hint-text strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .search-results-box .ask-assistant-hint .hint-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 18px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-family: var(--sans);
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.18s, box-shadow 0.18s, transform 0.1s;
+    }
+    .search-results-box .ask-assistant-hint .hint-btn:hover {
+      background: var(--accent-dark);
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+    .search-results-box .ask-assistant-hint .hint-btn:active { transform: scale(0.97); }
+    .search-results-box .ask-assistant-hint .hint-btn .ico { width: 14px; height: 14px; stroke-width: 1.7; }
+
+    .record-item.flash { animation: flashHighlight 1.6s ease-out; }
+    @keyframes flashHighlight {
+      0% { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+      100% { background: var(--surface); box-shadow: none; }
+    }
+
+    .chat-session-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .chat-session-bar .ai-session-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .ai-page-panel .chat-messages {
+      flex: 1;
+      min-height: 320px;
+      max-height: 62vh;
+    }
+    .ai-page-panel .chat-input-area {
+      padding: 14px 20px;
+    }
+
+    .archive-list { display: flex; flex-direction: column; gap: 8px; }
+    .archive-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+      border-radius: 14px;
+      background: var(--surface);
+      cursor: pointer;
+      transition: border-color 0.18s, box-shadow 0.18s;
+    }
+    .archive-item:hover { border-color: var(--accent); box-shadow: var(--shadow-card); }
+    .archive-item .archive-icon { color: var(--accent); flex-shrink: 0; opacity: 0.8; }
+    .archive-item .archive-main { flex: 1; min-width: 0; }
+    .archive-item .archive-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .archive-item .archive-meta {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px;
+      opacity: 0.7;
+    }
+    .archive-item .archive-delete {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      padding: 7px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      transition: color 0.15s, background 0.15s;
+    }
+    .archive-item .archive-delete:hover { color: var(--danger); background: var(--light-gray); }
+    .archive-empty { color: var(--muted); font-size: 12px; text-align: center; padding: 48px 0; opacity: 0.7; line-height: 2; }
+
+    .chat-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--bg);
+    }
+
+    .chat-msg {
+      max-width: 86%;
+      padding: 12px 17px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.75;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+    .chat-msg.user {
+      align-self: flex-end;
+      background: var(--accent);
+      color: #fff;
+      border-bottom-right-radius: 6px;
+    }
+    .chat-msg.assistant {
+      align-self: flex-start;
+      background: var(--surface);
+      border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+      border-bottom-left-radius: 6px;
+      box-shadow: var(--shadow-card);
+    }
+    .chat-msg .msg-time { font-size: 10px; color: var(--muted); display: block; margin-top: 6px; font-family: var(--mono); opacity: 0.7; }
+    .chat-msg.user .msg-time { color: rgba(255, 255, 255, 0.6); }
+
+    .chat-input-area {
+      display: flex;
+      gap: 10px;
+      padding: 14px 20px;
+      border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+      background: color-mix(in srgb, var(--surface) 90%, transparent);
+      flex-shrink: 0;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    }
+    .chat-input-area input {
+      flex: 1;
+      padding: 11px 16px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      font-family: var(--sans);
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      border-radius: 999px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .chat-input-area input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .chat-input-area button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 11px 20px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 999px;
+      transition: background 0.15s;
+    }
+    .chat-input-area button:hover { background: var(--accent-dark); }
+
+    .daily-reminder {
+      position: fixed;
+      bottom: calc(var(--tab-height) + 22px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+      padding: 14px 20px;
+      font-size: 13px;
+      color: var(--text);
+      box-shadow: var(--shadow-card);
+      border-radius: 999px;
+      max-width: 92%;
+      z-index: 60;
+      display: none;
+      animation: fadeSlideIn 0.35s ease;
+      backdrop-filter: blur(8px);
+    }
+    .daily-reminder .reminder-body { display: flex; align-items: center; gap: 10px; }
+    .daily-reminder .reminder-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 0 4px;
+      margin-left: auto;
+      opacity: 0.6;
+    }
+    .daily-reminder .reminder-close:hover { color: var(--text); opacity: 1; }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(16px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .container {
+      max-width: 1120px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 14px 24px;
+      flex: 1;
+      display: block;
+      gap: 0;
+      padding-bottom: 14px;
+    }
+
+    @media (min-width: 769px) {
+      body { padding-bottom: 0; }
+      .container {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 20px 48px;
+        padding-bottom: 72px;
+      }
+      .desktop-nav { display: flex; }
+      .tab-content { display: none; }
+      .tab-content.active { display: block; }
+      .mobile-tab-bar { display: none !important; }
+      .daily-reminder { bottom: 32px; left: auto; right: 32px; transform: none; max-width: 360px; }
+
+      .panel.dialog-panel {
+        min-height: calc(100dvh - var(--header-height) - 160px);
+      }
+      .hero-inner { max-width: 720px; }
+      .hero-mark { font-size: 34px; margin-bottom: 40px; }
+      .home-cats-wrap { margin-top: 56px; }
+      .hero-foot { margin-top: 52px; }
+    }
+
+    @media (max-width: 768px) {
+      input, textarea, select { font-size: 16px; }
+      .record-item .record-delete { opacity: 1; }
+      .tab-content { display: none; }
+      .tab-content.active { display: block; }
+      header {
+        padding: calc(8px + env(safe-area-inset-top, 0px)) 16px 8px;
+        min-height: calc(48px + env(safe-area-inset-top, 0px));
+      }
+      .brand h1 { font-size: 15px; }
+      .brand h1 .title-sub { font-size: 12px; }
+      header .date-stamp, header #recordCountDisplay { display: none; }
+      .header-btn { padding: 6px 10px; font-size: 12px; }
+      .header-btn.icon-only { padding: 6px; width: 30px; height: 30px; }
+      .header-meta { gap: 6px; }
+      .panel.dialog-panel { min-height: calc(100dvh - var(--header-height) - var(--tab-height) - 80px); }
+      .panel.dialog-panel { padding-bottom: 32px; }
+      .ai-page-panel { min-height: calc(100dvh - var(--header-height) - var(--tab-height) - 30px); }
+      .daily-reminder { bottom: calc(var(--tab-height) + env(safe-area-inset-bottom, 0px) + 18px); }
+      .home-cats-wrap { margin-top: 32px; }
+    }
+    @media (hover: none) {
+      .brand h1 .title-main:hover,
+      .header-btn:hover,
+      .header-btn:active,
+      .setting-group .input-row .btn-sm:hover,
+      .setting-group .input-row .btn-sm:active,
+      .setting-group .input-row .btn-sm.outline:hover,
+      .setting-group .input-row .btn-sm.outline:active,
+      .wp-option:hover,
+      .wp-upload-area:hover,
+      .settings-close:hover,
+      .settings-close:active,
+      .auth-panel .btn-auth:hover,
+      .auth-panel .btn-auth:active,
+      .auth-panel .btn-action:hover,
+      .auth-panel .btn-action:active,
+      .auth-panel .auth-switch a:hover,
+      .chat-input-area button:hover,
+      .chat-input-area button:active,
+      .daily-reminder .reminder-close:hover,
+      .category-grid .cat-btn:hover,
+      .category-grid .cat-btn:active,
+      .btn-submit:hover,
+      .btn-submit:active,
+      .filter-item:hover,
+      .filter-item:active,
+      .search-bar .search-clear:hover,
+      .record-item:hover,
+      .record-item:hover .record-delete,
+      .record-delete:hover,
+      .record-item:hover .record-delete:active,
+      .btn-action:hover,
+      .btn-action:active,
+      .btn-action.danger:hover,
+      .import-area:hover,
+      .tab-btn:hover,
+      .nav-item:hover,
+      .search-results-box .ask-assistant-hint .hint-btn:hover,
+      .search-results-box .ask-assistant-hint .hint-btn:active {
+        background: none !important;
+        border-color: var(--border) !important;
+        color: inherit !important;
+        transform: none !important;
+        opacity: 1 !important;
+        box-shadow: none !important;
+      }
+      .tab-item.active { color: var(--accent) !important; }
+      .tab-item.active .ico-lg { stroke: var(--accent) !important; }
+    }
+
+    .tab-content { animation: fadeIn 0.25s ease; }
+    @media (max-width: 768px) { .tab-content { animation: none; } }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .mobile-tab-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: calc(var(--tab-height) + env(safe-area-inset-bottom, 0px));
+      background: color-mix(in srgb, var(--surface) 88%, transparent);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+      display: none;
+      z-index: 60;
+      justify-content: space-around;
+      align-items: center;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    @media (max-width: 768px) { .mobile-tab-bar { display: flex; } }
+
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 10px;
+      cursor: pointer;
+      padding: 8px 14px;
+      transition: color 0.2s;
+      position: relative;
+      -webkit-tap-highlight-color: transparent;
+      flex: 1;
+      height: 100%;
+      max-width: 96px;
+      -webkit-touch-callout: none;
+    }
+    .tab-item .ico-lg { width: 24px; height: 24px; stroke-width: 1.5; transition: transform 0.2s; }
+    .tab-item.active { color: var(--accent); }
+    .tab-item.active .ico-lg { stroke: var(--accent); }
+    .tab-item.active .ico-lg { transform: translateY(-1px); }
+    .tab-item .tab-badge {
+      position: absolute;
+      top: 8px;
+      right: 50%;
+      transform: translateX(calc(50% + 20px));
+      background: var(--accent);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 999px;
+      min-width: 18px;
+      text-align: center;
+      line-height: 15px;
+      box-shadow: 0 2px 8px var(--accent-glow);
+    }
+    .tab-item .tab-label { font-size: 10px; letter-spacing: 0.04em; font-weight: 500; }
+
+    .panel {
+      background: color-mix(in srgb, var(--surface) 90%, transparent);
+      border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      height: 100%;
+      min-height: 400px;
+      box-shadow: var(--shadow-card);
+      backdrop-filter: blur(4px);
+    }
+    @media (max-width: 768px) {
+      .panel {
+        min-height: 320px;
+        border-radius: 18px;
+        box-shadow: 0 1px 2px rgba(32, 33, 36, 0.03), 0 6px 18px rgba(32, 33, 36, 0.04);
+      }
+    }
+
+    .panel-header {
+      padding: 15px 20px;
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+      background: color-mix(in srgb, var(--surface) 70%, transparent);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      letter-spacing: 0.1em;
+      flex-shrink: 0;
+      color: var(--muted);
+    }
+    .panel-header .panel-count {
+      color: var(--accent);
+      font-weight: 600;
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+      padding: 3px 11px;
+      border-radius: 999px;
+      font-size: 10px;
+    }
+    .crosshair {
+      color: var(--accent);
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 1;
+      opacity: 0.7;
+    }
+
+    .input-section { padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 16px; flex: 1; }
+
+    .entry-guide {
+      text-align: center;
+      padding: 0 0 14px;
+      font-family: var(--sans);
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+      margin-bottom: 2px;
+    }
+    .entry-guide strong {
+      color: var(--text);
+      font-weight: 600;
+      font-size: 15px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .category-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .category-grid .cat-btn {
+      border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+      background: var(--surface);
+      padding: 12px 4px 10px;
+      text-align: center;
+      cursor: pointer;
+      font-family: var(--sans);
+      font-size: 12px;
+      transition: all 0.2s ease;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: var(--text);
+    }
+    .category-grid .cat-btn .cat-icon {
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+    .category-grid .cat-btn .cat-icon .ico { width: 19px; height: 19px; stroke-width: 1.6; }
+    .category-grid .cat-btn .cat-label { font-size: 12px; line-height: 1.3; font-weight: 500; letter-spacing: 0.02em; }
+    .category-grid .cat-btn.active {
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 15%, transparent);
+    }
+    .category-grid .cat-btn.active .cat-icon { color: var(--accent); }
+    .category-grid .cat-btn.active .cat-label { color: var(--accent); font-weight: 600; }
+    .category-grid .cat-btn:hover { border-color: var(--accent); }
+
+    textarea {
+      width: 100%;
+      height: 118px;
+      padding: 14px 16px;
+      border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+      background: var(--bg);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.7;
+      resize: vertical;
+      outline: none;
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+    }
+    textarea:focus {
+      border-color: var(--accent);
+      background: var(--surface);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    textarea::placeholder { color: var(--muted); opacity: 0.6; }
+
+    .input-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .char-count { font-family: var(--mono); font-size: 11px; color: var(--muted); opacity: 0.7; }
+    .save-feedback {
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--success);
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+    .save-feedback.show { opacity: 1; }
+    .btn-submit {
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      padding: 10px 20px;
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      letter-spacing: 0.08em;
+      border-radius: 999px;
+      transition: opacity 0.18s, transform 0.1s;
+    }
+    .btn-submit:hover { opacity: 0.8; }
+    .btn-submit:active { transform: scale(0.97); }
+    .btn-submit.icon {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      margin-bottom: 5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border-radius: 50%;
+    }
+    .btn-submit.icon .ico { width: 17px; height: 17px; stroke-width: 1.8; }
+
+    .timeline-panel { min-height: 320px; }
+    .timeline-panel .records-list { flex: 1; overflow-y: auto; }
+
+    .filter-bar {
+      padding: 12px 16px;
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      font-family: var(--sans);
+      font-size: 12px;
+      align-items: center;
+      flex-wrap: nowrap;
+      flex-shrink: 0;
+      background: color-mix(in srgb, var(--bg) 80%, transparent);
+    }
+    .filter-item {
+      cursor: pointer;
+      color: var(--muted);
+      white-space: nowrap;
+      padding: 6px 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      border-radius: 999px;
+      font-weight: 500;
+      transition: all 0.18s;
+    }
+    .filter-item.active {
+      color: #fff;
+      font-weight: 600;
+      background: var(--accent);
+      box-shadow: 0 2px 10px var(--accent-glow);
+    }
+    .filter-item:hover { color: var(--accent); background: var(--light-gray); }
+    .filter-item.active:hover { color: #fff; background: var(--accent-dark); }
+
+    .search-bar {
+      padding: 10px 18px;
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .search-bar input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-family: var(--sans);
+      font-size: 13px;
+      outline: none;
+      color: var(--text);
+      padding: 6px 0;
+    }
+    .search-bar input::placeholder { color: var(--muted); opacity: 0.6; }
+    .search-bar .search-icon { color: var(--muted); display: flex; opacity: 0.6; }
+    .search-bar .search-clear {
+      background: var(--light-gray);
+      border: none;
+      width: 24px;
+      height: 24px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 11px;
+      display: none;
+      border-radius: 50%;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    .search-bar .search-clear.show { display: inline-flex; }
+    .search-bar .search-clear:hover { background: var(--border); color: var(--text); }
+
+    .records-list { list-style: none; padding: 0; overflow-y: auto; flex: 1; }
+
+    .date-group .date-label {
+      padding: 14px 20px 8px 20px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      background: linear-gradient(color-mix(in srgb, var(--surface) 95%, transparent), color-mix(in srgb, var(--surface) 85%, transparent));
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+
+    .record-item {
+      padding: 16px 20px;
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 35%, transparent);
+      display: grid;
+      grid-template-columns: 36px 1fr 24px;
+      gap: 14px;
+      align-items: start;
+      transition: background 0.18s;
+    }
+    .record-item:hover { background: color-mix(in srgb, var(--light-gray) 60%, transparent); }
+    .record-item:last-child { border-bottom: none; }
+
+    .record-meta {
+      font-family: var(--mono);
+      font-size: 9px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      padding-top: 2px;
+    }
+    .record-cat-icon {
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+    }
+    .record-cat-icon .ico { width: 16px; height: 16px; }
+    .record-time { color: var(--muted); font-size: 9px; text-align: center; letter-spacing: 0.04em; opacity: 0.7; }
+
+    .record-content { font-size: 14px; word-break: break-word; white-space: pre-wrap; line-height: 1.75; color: var(--text); }
+
+    .record-delete {
+      background: transparent;
+      border: none;
+      color: var(--border-dark);
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+      text-align: right;
+      opacity: 0;
+      transition: opacity 0.25s, color 0.15s;
+      padding: 3px;
+      width: 24px;
+      height: 24px;
+      border-radius: 7px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .record-item:hover .record-delete { opacity: 1; }
+    .record-delete:hover { color: #fff; background: var(--danger); }
+
+    .empty-state {
+      padding: 64px 20px;
+      text-align: center;
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 13px;
+      line-height: 2.2;
+    }
+    .empty-state .empty-icon {
+      display: inline-flex;
+      margin-bottom: 12px;
+      opacity: 0.3;
+      color: var(--border-dark);
+    }
+    .empty-state .empty-icon .ico { width: 36px; height: 36px; stroke-width: 1.1; }
+
+    .summary-column .summary-tabs {
+      display: flex;
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+      flex-shrink: 0;
+      gap: 6px;
+      padding: 12px 18px;
+      background: color-mix(in srgb, var(--bg) 80%, transparent);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 8px 4px;
+      text-align: center;
+      background: transparent;
+      border: none;
+      font-family: var(--sans);
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--muted);
+      border-radius: 999px;
+      font-weight: 500;
+      transition: all 0.18s;
+    }
+    .tab-btn.active {
+      background: var(--surface);
+      color: var(--accent);
+      font-weight: 600;
+      box-shadow: 0 1px 6px rgba(32, 33, 36, 0.08);
+      border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    }
+
+    .summary-content { padding: 20px 22px 22px; display: flex; flex-direction: column; gap: 18px; flex: 1; }
+
+    .summary-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .summary-stat {
+      background: var(--bg);
+      padding: 16px 14px;
+      text-align: center;
+      border-radius: 14px;
+      border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    }
+    .summary-stat .stat-number {
+      font-family: var(--mono);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+    .summary-stat .stat-label { font-size: 11px; color: var(--muted); font-family: var(--sans); margin-top: 4px; opacity: 0.8; }
+
+    .summary-box {
+      border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+      padding: 18px 20px;
+      background: var(--bg);
+      font-size: 13px;
+      line-height: 1.8;
+      min-height: 110px;
+      border-radius: 14px;
+      flex: 1;
+      color: var(--text);
+    }
+    .summary-box .summary-category-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 8px;
+      margin-top: 10px;
+    }
+    .summary-box .summary-category-list .cat-tag {
+      font-size: 11px;
+      font-family: var(--sans);
+      padding: 4px 12px;
+      background: var(--surface);
+      border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .summary-box .summary-category-list .cat-tag .count { color: var(--accent); font-weight: 700; }
+
+    .summary-actions { display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
+    .summary-actions .btn-row { display: flex; gap: 10px; }
+    .summary-actions .btn-row .btn-action { flex: 1; }
+
+    .btn-action {
+      background: color-mix(in srgb, var(--light-gray) 80%, transparent);
+      border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+      padding: 11px 14px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      letter-spacing: 0.02em;
+      border-radius: var(--radius-sm);
+      transition: all 0.18s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      color: var(--text);
+    }
+    .btn-action:hover { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 4px 14px var(--accent-glow); }
+    .btn-action.danger:hover { background: var(--danger); border-color: var(--danger); color: #fff; }
+
+    .status-line {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+      padding-top: 12px;
+      letter-spacing: 0.08em;
+      flex-shrink: 0;
+      opacity: 0.6;
+    }
+    .status-line .elearch-mark { opacity: 0.35; }
+
+    .import-area {
+      border: 2px dashed color-mix(in srgb, var(--border) 70%, transparent);
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      font-family: var(--sans);
+      font-size: 12px;
+      color: var(--muted);
+      border-radius: 14px;
+      margin-top: 10px;
+      transition: border-color 0.2s, background 0.2s, color 0.2s;
+      line-height: 1.7;
+    }
+    .import-area:hover { border-color: var(--accent); color: var(--text); background: var(--light-gray); }
+    .import-area input[type="file"] { display: none; }
+    .import-result {
+      font-size: 12px;
+      font-family: var(--sans);
+      margin-top: 10px;
+      padding: 10px 14px;
+      background: var(--bg);
+      border-radius: 12px;
+      display: none;
+      color: var(--text);
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 60%, transparent);
+    }
+    .import-result.show { display: block; }
+    .import-result.success { border-left: 3px solid var(--success); }
+    .import-result.error { border-left: 3px solid var(--danger); }
+
+    .session-actions { display: flex; align-items: center; gap: 8px; }
+    .archive-head { display: flex; align-items: center; gap: 12px; }
+    .archive-title { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted); opacity: 0.7; }
+
+    .panel.dialog-panel { padding-top: 6px; }
+    @media (max-width: 768px) {
+      .hero-mark { font-size: 23px; letter-spacing: 0.34em; text-indent: 0.34em; margin: 0 0 22px; }
+      .dialog-shell { border-radius: 26px; padding: 6px 8px 6px 18px; min-height: 54px; }
+      .dialog-search-icon { padding-bottom: 13px; }
+      .dialog-input-wrap textarea { font-size: 16px; padding: 13px 0; }
+      .btn-submit.icon { width: 38px; height: 38px; margin-bottom: 4px; }
+      .category-grid.home-cats {
+        display: grid;
+        grid-template-columns: repeat(3, auto);
+        justify-content: center;
+        column-gap: 18px;
+        row-gap: 12px;
+      }
+      .home-cats .cat-btn {
+        display: flex;
+        width: auto;
+        justify-content: center;
+        padding: 5px 11px;
+        gap: 4px;
+        border-radius: 999px;
+      }
+      .home-cats .cat-btn .cat-icon { width: 12px; height: 12px; }
+      .home-cats .cat-btn .cat-icon .ico { width: 12px; height: 12px; }
+      .home-cats .cat-btn .cat-label { font-size: 10.5px; letter-spacing: 0.02em; }
+      .hero-foot { margin-top: 30px; font-size: 9px; gap: 6px; }
+      .brand h1 .title-sub { display: none; }
+    }
+    @media (max-width: 768px) {
+      header .date-stamp, header #recordCountDisplay { display: inline; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header>
+    <div class="brand">
+      <h1>
+        <span class="title-main" id="titleDisplay">GLINT</span>
+        <span class="title-sub">· 万物集</span>
+      </h1>
+      <span class="sync-status" id="syncStatus">
+        <span class="sync-dot" style="display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;"></span> 本地
+      </span>
+    </div>
+    <div class="header-meta">
+      <button class="header-btn icon-only" id="searchHeaderBtn" title="搜索">
+        <svg class="ico-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <button class="header-btn icon-only" id="settingsToggle" title="设置">
+        <svg class="ico-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== AUTH OVERLAY ===== -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-panel">
+      <h2 id="authTitle">登录</h2>
+      <div class="auth-sub" id="authSub">使用邮箱登录以跨设备同步；不登录仅在本地使用，不会同步</div>
+      <div class="auth-error" id="authError"></div>
+      <input type="email" id="authEmail" placeholder="邮箱" />
+      <input type="password" id="authPassword" placeholder="密码" />
+      <button class="btn-auth" id="authSubmitBtn">登录</button>
+      <div class="auth-switch">
+        <span id="authSwitchText">还没有账号？</span>
+        <a id="authSwitchLink">注册</a>
+      </div>
+      <div style="margin-top:12px;text-align:center;">
+        <button class="btn-action" id="authGuestBtn" style="width:100%;">暂不登录，仅本地使用</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SETTINGS OVERLAY ===== -->
+  <div class="settings-overlay" id="settingsOverlay">
+    <div class="settings-panel">
+      <h2>
+        <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>GLINT · 配置</span>
+      </h2>
+
+      <div class="setting-group">
+        <label>账号（跨设备同步需登录）</label>
+        <button class="btn-action" id="authToggleBtn">
+          <svg class="ico-sm" viewBox="0 0 24 24"><path d="M21 2l-2 2m-1.5 1.5L14 9l-3 3-4-4-5 5 1.5 1.5M7 17l4 4 1-1-1-1 2-2-1-1 1-1"/></svg>
+          <span>登录</span>
+        </button>
+      </div>
+
+      <div class="setting-group">
+        <label>❶ 主标题</label>
+        <input type="text" id="titleInput" value="GLINT" />
+      </div>
+
+      <div class="setting-group">
+        <label>❷ 墙纸</label>
+        <div class="wallpaper-grid" id="wallpaperGrid">
+          <div class="wp-option active" data-wp="wp-default" style="background:radial-gradient(#c8cdd2 1px,transparent 1px);background-size:16px 16px;"><span class="wp-label">点阵</span></div>
+          <div class="wp-option" data-wp="wp-white" style="background:#fafbfc;border-color:#d5d9dd;"><span class="wp-label" style="color:#333;background:rgba(250,251,252,0.7);">纯白</span></div>
+          <div class="wp-option" data-wp="wp-warm" style="background:#f5efe8;"><span class="wp-label">暖白</span></div>
+          <div class="wp-option" data-wp="wp-dark" style="background:#1a1c1e;"><span class="wp-label" style="color:#e4e6e8;">暗色</span></div>
+          <div class="wp-option" data-wp="wp-paper" style="background:#e8eae6;"><span class="wp-label">纸纹</span></div>
+          <div class="wp-option" data-wp="wp-grid" style="background:linear-gradient(rgba(0,0,0,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.04) 1px,transparent 1px);background-size:24px 24px;"><span class="wp-label">网格</span></div>
+          <div class="wp-upload-area" id="wpUploadArea">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>上传图片</span>
+            <input type="file" id="wpFileInput" accept="image/*" />
+          </div>
+          <div class="wp-option" id="wpCustomPreview" data-wp="wp-custom" style="border-style:dashed;display:none;">
+            <img class="wp-preview-img" id="wpCustomPreviewImg" />
+            <span class="wp-label">自定义</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <label>❸ Supabase 同步</label>
+        <input type="text" id="sbUrl" placeholder="https://xxxx.supabase.co（Settings → API → Project URL）" />
+        <input type="text" id="sbKey" placeholder="anon public key（Settings → API → anon public）」" style="margin-top:4px;" />
+        <input type="text" id="sbTable" placeholder="Table 名称（默认 glint_records）" value="glint_records" style="margin-top:4px;" />
+        <div style="font-size:9px;color:var(--muted);margin-top:6px;font-family:var(--mono);line-height:1.6;">配置后启用云端同步与多设备登录。首次使用请先在 Supabase SQL Editor 执行下方“复制建表 SQL”创建表与 RLS 策略，否则同步会报错。</div>
+        <div class="input-row" style="margin-top:8px;">
+          <button class="btn-sm" id="copySqlBtn">复制建表 SQL</button>
+          <button class="btn-sm outline" id="syncCheckBtn">检测连接</button>
+        </div>
+        <div id="syncCheckResult" style="font-size:10px;color:var(--muted);margin-top:8px;font-family:var(--mono);white-space:pre-wrap;line-height:1.6;"></div>
+      </div>
+
+      <div class="setting-group">
+        <label>❹ 档案助理 · AI 接口</label>
+        <input type="text" id="aiEndpoint" placeholder="API Endpoint（如 https://api.deepseek.com 或完整地址 .../v1/chat/completions）" />
+        <input type="password" id="aiKey" placeholder="API Key" style="margin-top:4px;" />
+        <input type="text" id="aiModel" placeholder="Model" value="gpt-4o-mini" style="margin-top:4px;" />
+        <textarea id="aiPrompt" placeholder="System Prompt">你是用户的私人档案助理，名叫 GLINT。你的职责有三方面：一是精确检索，帮用户找到其记录中提到的具体内容；二是归纳总结，基于多条记录回顾某段时间的状态、情绪或主题；三是自由聊天，像一位安静、可靠的朋友一样陪用户说话。回答时语气克制、温和、略带诗意，不堆砌辞藻，不主动说教。当用户询问与记录相关的内容时，优先基于真实记录回答，并尽量引用原始语句；当用户只是想聊天时，自然回应即可。如果记录中没有相关信息，坦诚说明，不要编造。</textarea>
+        <div style="font-size:9px;color:var(--muted);margin-top:6px;font-family:var(--mono);line-height:1.7;">
+          填写规则：可只填服务商基础地址（如 https://api.deepseek.com），系统会自动补全 /v1/chat/completions；<br>
+          也可直接填完整地址。常见服务商参考：<br>
+          · OpenAI：https://api.openai.com/v1/chat/completions<br>
+          · DeepSeek：https://api.deepseek.com/v1/chat/completions<br>
+          · Kimi：https://api.moonshot.cn/v1/chat/completions<br>
+          · 通义：https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions<br>
+          · 智谱：https://open.bigmodel.cn/api/paas/v4/chat/completions
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <label>❺ 数据管理</label>
+        <div class="input-row">
+          <button class="btn-sm" id="exportBtn">
+            <svg class="ico-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>导出 JSON</span>
+          </button>
+          <button class="btn-sm outline" id="importTriggerBtn">
+            <svg class="ico-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>增量导入</span>
+          </button>
+        </div>
+        <div class="import-area" id="importArea">
+          <span>选择 JSON 文件导入（自动按 ID 去重）</span>
+          <input type="file" id="importFileInput" accept=".json" />
+        </div>
+        <div class="import-result" id="importResult"></div>
+      </div>
+
+      <button class="settings-close" id="settingsClose">保存并关闭</button>
+    </div>
+  </div>
+
+  <!-- ===== DAILY REMINDER ===== -->
+  <div class="daily-reminder" id="dailyReminder">
+    <div class="reminder-body">
+      <svg class="ico" viewBox="0 0 24 24" style="color:var(--accent-warm);"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      <span id="reminderText">今天还没留下什么，要不要记一笔？</span>
+      <button class="reminder-close" id="reminderClose">✕</button>
+    </div>
+  </div>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="container">
+
+    <nav class="desktop-nav" id="desktopNav">
+      <button class="nav-item active" data-tab="home">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span>首页</span>
+      </button>
+      <button class="nav-item" data-tab="timeline">
+        <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>时间线</span>
+      </button>
+      <button class="nav-item" data-tab="ai">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><polyline points="9 11 12 8 15 11 12 14"/></svg>
+        <span>档案助理</span>
+      </button>
+      <button class="nav-item" data-tab="summary">
+        <svg class="ico" viewBox="0 0 24 24"><line x1="3" y1="20" x2="21" y2="20"/><rect x="5" y="11" width="3.4" height="7"/><rect x="10.3" y="6" width="3.4" height="12"/><rect x="15.6" y="13" width="3.4" height="5"/></svg>
+        <span>映射</span>
+      </button>
+    </nav>
+
+    <!-- VIEW 首页 -->
+    <div class="tab-content active" data-tab="home">
+      <section class="panel dialog-panel hero-home">
+        <div class="hero-inner">
+          <div class="hero-mark" id="heroMark">GLINT</div>
+          <div class="dialog-shell">
+            <span class="dialog-search-icon">
+              <svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </span>
+            <div class="dialog-input-wrap">
+              <textarea id="recordInput" placeholder="今天看到了什么？"></textarea>
+            </div>
+            <button class="btn-submit icon" id="saveBtn" title="存档（⌘/Ctrl + 回车）" aria-label="存档">
+              <svg class="ico" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+            </button>
+          </div>
+          <div class="home-cats-wrap">
+            <div class="category-grid home-cats" id="categoryContainer">
+              <button class="cat-btn active" data-cat="目之所见">
+                <span class="cat-icon">
+                  <svg class="ico" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="1" y1="1" x2="4" y2="4" style="stroke-width:1.2;"/></svg>
+                </span>
+                <span class="cat-label">目之所见</span>
+              </button>
+              <button class="cat-btn" data-cat="耳之所闻">
+                <span class="cat-icon">
+                  <svg class="ico" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+                </span>
+                <span class="cat-label">耳之所闻</span>
+              </button>
+              <button class="cat-btn" data-cat="身之所感">
+                <span class="cat-icon">
+                  <svg class="ico" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="12 8 12 12 14 14"/></svg>
+                </span>
+                <span class="cat-label">身之所感</span>
+              </button>
+              <button class="cat-btn" data-cat="心之所想">
+                <span class="cat-icon">
+                  <svg class="ico" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                </span>
+                <span class="cat-label">心之所想</span>
+              </button>
+              <button class="cat-btn" data-cat="世间所遇">
+                <span class="cat-icon">
+                  <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3"/><path d="M5 19v-2a7 7 0 0 1 14 0v2"/><path d="M5 13v-2a7 7 0 0 1 14 0v2"/><line x1="12" y1="10" x2="12" y2="16"/></svg>
+                </span>
+                <span class="cat-label">世间所遇</span>
+              </button>
+              <button class="cat-btn" data-cat="手中所藏">
+                <span class="cat-icon">
+                  <svg class="ico" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                </span>
+                <span class="cat-label">手中所藏</span>
+              </button>
+            </div>
+          </div>
+          <div class="hero-foot">
+            <span class="save-feedback" id="saveFeedback">已存档</span>
+            <span class="date-stamp" id="currentDateDisplay">----.--.--</span>
+            <span class="hero-sep">·</span>
+            <span>已存 <span id="recordCountDisplay">0</span> 条</span>
+            <span class="hero-sep">·</span>
+            <span><span class="char-count" id="charCount">0</span> 字</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- VIEW 搜索 -->
+    <div class="tab-content" data-tab="search">
+      <section class="panel search-page-panel">
+        <div class="search-bar page-searchbar">
+          <span class="search-icon">
+            <svg class="ico-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </span>
+          <input type="text" id="searchInput" placeholder="搜索记录与对话…" />
+          <button class="search-clear" id="searchClear">✕</button>
+        </div>
+        <div class="search-results-box" id="homeSearchResults"></div>
+      </section>
+    </div>
+
+    <!-- VIEW 档案助理 -->
+    <div class="tab-content" data-tab="ai">
+      <section class="panel ai-page-panel">
+        <div class="chat-session-bar">
+          <span class="ai-session-label" id="aiSessionLabel">新对话</span>
+          <div class="session-actions">
+            <button class="btn-sm outline" id="aiHistoryBtn">历史</button>
+            <button class="btn-sm outline" id="aiNewChatBtn">＋ 新对话</button>
+          </div>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-msg assistant">
+            我是你的档案助理，可以帮你检索记录，也可以陪你聊聊。
+            <span class="msg-time">想问什么，或是想说什么，都可以</span>
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <input type="text" id="chatInput" placeholder="检索档案，或随便聊聊…" />
+          <button id="chatSendBtn">发送</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- VIEW 时间线 -->
+    <div class="tab-content" data-tab="timeline">
+      <section class="panel timeline-panel">
+        <div class="panel-header">
+          <span>// 时间线</span>
+          <span class="panel-count" id="timelineCount">0</span>
+        </div>
+        <div class="filter-bar" id="filterBar">
+          <span class="filter-item active" data-filter="ALL">全部</span>
+          <span class="filter-item" data-filter="目之所见">目</span>
+          <span class="filter-item" data-filter="耳之所闻">耳</span>
+          <span class="filter-item" data-filter="身之所感">身</span>
+          <span class="filter-item" data-filter="心之所想">心</span>
+          <span class="filter-item" data-filter="世间所遇">遇</span>
+          <span class="filter-item" data-filter="手中所藏">藏</span>
+        </div>
+        <ul class="records-list" id="recordsList"></ul>
+      </section>
+    </div>
+
+    <!-- VIEW 总结 -->
+    <div class="tab-content" data-tab="summary">
+      <section class="panel summary-column">
+        <div class="panel-header">
+          <span>// 映射</span>
+          <span class="crosshair">+</span>
+        </div>
+        <div class="summary-tabs">
+          <button class="tab-btn active" data-period="day">日</button>
+          <button class="tab-btn" data-period="week">周</button>
+          <button class="tab-btn" data-period="month">月</button>
+        </div>
+        <div class="summary-content">
+          <div class="summary-stats" id="summaryStats">
+            <div class="summary-stat">
+              <div class="stat-number" id="statTotal">0</div>
+              <div class="stat-label">记录</div>
+            </div>
+            <div class="summary-stat">
+              <div class="stat-number" id="statToday">0</div>
+              <div class="stat-label">今日</div>
+            </div>
+          </div>
+          <div class="summary-box" id="summaryOutput">
+            <div style="color:var(--muted);font-size:11px;">选择时段，查看结构映射</div>
+          </div>
+          <div class="summary-actions">
+            <button class="btn-action" id="genSummaryBtn">生成摘要</button>
+            <div class="btn-row">
+              <button class="btn-action" id="quickDayBtn">今日</button>
+              <button class="btn-action" id="quickWeekBtn">本周</button>
+              <button class="btn-action" id="quickMonthBtn">本月</button>
+            </div>
+          </div>
+          <div class="status-line">
+            <span class="elearch-mark">ELEARCH · GLINT</span>
+            <span id="statusReady">READY</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- VIEW 档案库 -->
+    <div class="tab-content" data-tab="archive">
+      <section class="panel archive-panel">
+        <div class="panel-header">
+          <div class="archive-head">
+            <button class="btn-sm outline" id="archiveBackBtn">← 返回对话</button>
+            <span class="archive-title">// 对话历史</span>
+          </div>
+          <span class="panel-count" id="archiveCount">0</span>
+        </div>
+        <div class="archive-list" id="archiveList"></div>
+      </section>
+    </div>
+
+  </main>
+
+  <!-- ===== 移动端底部导航栏 ===== -->
+  <nav class="mobile-tab-bar" id="mobileTabBar">
+    <button class="tab-item" data-tab="home">
+      <svg class="ico-lg" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="tab-label">首页</span>
+    </button>
+    <button class="tab-item" data-tab="timeline">
+      <svg class="ico-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span class="tab-label">时间线</span>
+      <span class="tab-badge" id="mobileBadge">0</span>
+    </button>
+    <button class="tab-item" data-tab="ai">
+      <svg class="ico-lg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><polyline points="9 11 12 8 15 11 12 14"/></svg>
+      <span class="tab-label">档案助理</span>
+    </button>
+    <button class="tab-item" data-tab="summary">
+      <svg class="ico-lg" viewBox="0 0 24 24"><line x1="3" y1="20" x2="21" y2="20"/><rect x="5" y="11" width="3.4" height="7"/><rect x="10.3" y="6" width="3.4" height="12"/><rect x="15.6" y="13" width="3.4" height="5"/></svg>
+      <span class="tab-label">映射</span>
+    </button>
+  </nav>
+
+  <script>
+  (function() {
+    'use strict';
+
+    var STORAGE_KEY = 'glint_records_v1';
+    var CONFIG_KEY = 'glint_config_v1';
+    var ASSISTANT_RECORD_LIMIT = 300; // v6: 档案助理背景记录上限
+
+    var storageOK = (function () {
+      try {
+        localStorage.setItem('__glint_probe__', '1');
+        localStorage.removeItem('__glint_probe__');
+        return true;
+      } catch (e) { return false; }
+    })();
+    function persist(key, val) {
+      if (storageOK) { try { localStorage.setItem(key, val); } catch (e) {} }
+    }
+    function load(key) {
+      if (!storageOK) return null;
+      try { return localStorage.getItem(key); } catch (e) { return null; }
+    }
+
+    var CATEGORY_ICONS = {
+      '目之所见': '<svg class="ico" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="1" y1="1" x2="4" y2="4" style="stroke-width:1.2;"/></svg>',
+      '耳之所闻': '<svg class="ico" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>',
+      '身之所感': '<svg class="ico" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="12 8 12 12 14 14"/></svg>',
+      '心之所想': '<svg class="ico" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>',
+      '世间所遇': '<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3"/><path d="M5 19v-2a7 7 0 0 1 14 0v2"/><path d="M5 13v-2a7 7 0 0 1 14 0v2"/><line x1="12" y1="10" x2="12" y2="16"/></svg>',
+      '手中所藏': '<svg class="ico" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>'
+    };
+
+    var CATEGORY_PLACEHOLDERS = {
+      '目之所见': '今天看到了什么？',
+      '耳之所闻': '今天听到了什么？',
+      '身之所感': '今天身体有什么变化？',
+      '心之所想': '今天有什么念头？',
+      '世间所遇': '今天遇到了谁或什么事？',
+      '手中所藏': '今天有什么东西值得留下？'
+    };
+
+    var defaultConfig = {
+      title: 'GLINT',
+      wallpaper: 'wp-white',
+      customWallpaper: '',
+      sbUrl: '',
+      sbKey: '',
+      sbTable: 'glint_records',
+      aiEndpoint: '',
+      aiKey: '',
+      aiModel: 'gpt-4o-mini',
+      aiPrompt: '你是用户的私人档案助理，名叫 GLINT。你的职责有三方面：一是精确检索，帮用户找到其记录中提到的具体内容；二是归纳总结，基于多条记录回顾某段时间的状态、情绪或主题；三是自由聊天，像一位安静、可靠的朋友一样陪用户说话。回答时语气克制、温和、略带诗意，不堆砌辞藻，不主动说教。当用户询问与记录相关的内容时，优先基于真实记录回答，并尽量引用原始语句；当用户只是想聊天时，自然回应即可。如果记录中没有相关信息，坦诚说明，不要编造。'
+    };
+
+    var config = JSON.parse(load(CONFIG_KEY) || JSON.stringify(defaultConfig));
+    for (var k in defaultConfig) { if (!(k in config)) config[k] = defaultConfig[k]; }
+    // ── 象元Go 系统统一配置：宿主注入时优先使用 ──
+    try {
+      var _xl = null;
+      if (window.XLCloud) _xl = JSON.parse(window.XLCloud);
+      if (!_xl && window.__elemCloudBase) _xl = { base: window.__elemCloudBase, key: window.__elemCloudKey, model: window.__elemCloudModel };
+      if (_xl) {
+        if (_xl.base) config.aiEndpoint = _xl.base;
+        if (_xl.key) config.aiKey = _xl.key;
+        if (_xl.model) config.aiModel = _xl.model;
+      }
+      if (window.XLSet) { var _xs = JSON.parse(window.XLSet);
+        if (_xs.apiBase) config.aiEndpoint = _xs.apiBase;
+        if (_xs.apiKey) config.aiKey = _xs.apiKey;
+        if (_xs.apiModel) config.aiModel = _xs.apiModel;
+      }
+    } catch(e){}
+
+    var records = JSON.parse(load(STORAGE_KEY) || '[]');
+    var currentCategory = '目之所见';
+    var currentFilter = 'ALL';
+    var currentPeriod = 'day';
+    var searchQuery = '';
+    var supabase = null;
+    var syncEnabled = false;
+    var copySqlBtn = $('copySqlBtn');
+    var syncCheckBtn = $('syncCheckBtn');
+    var syncCheckResult = $('syncCheckResult');
+    var currentUser = null;
+    var CHAT_KEY = 'glint_chat_sessions_v1';
+    var chatSessions = [];
+    try { chatSessions = JSON.parse(load(CHAT_KEY) || '[]'); } catch (e) { chatSessions = []; }
+    if (!Array.isArray(chatSessions)) chatSessions = [];
+    var activeSessionId = null;
+    var isMobile = window.innerWidth <= 768;
+
+    function $(id) { return document.getElementById(id); }
+
+    var titleDisplay = $('titleDisplay');
+    var heroMark = $('heroMark');
+    var titleInput = $('titleInput');
+    var recordInput = $('recordInput');
+    var saveBtn = $('saveBtn');
+    var charCount = $('charCount');
+    var recordsList = $('recordsList');
+    var recordCountDisplay = $('recordCountDisplay');
+    var timelineCount = $('timelineCount');
+    var currentDateDisplay = $('currentDateDisplay');
+    var categoryContainer = $('categoryContainer');
+    var summaryOutput = $('summaryOutput');
+    var statTotal = $('statTotal');
+    var statToday = $('statToday');
+    var genSummaryBtn = $('genSummaryBtn');
+    var settingsToggle = $('settingsToggle');
+    var settingsOverlay = $('settingsOverlay');
+    var settingsClose = $('settingsClose');
+    var saveFeedback = $('saveFeedback');
+    var syncStatus = $('syncStatus');
+    var filterBar = $('filterBar');
+    var searchInput = $('searchInput');
+    var searchClear = $('searchClear');
+
+    var aiEndpoint = $('aiEndpoint');
+    var aiKey = $('aiKey');
+    var aiModel = $('aiModel');
+    var aiPrompt = $('aiPrompt');
+    var sbUrl = $('sbUrl');
+    var sbKey = $('sbKey');
+    var sbTable = $('sbTable');
+    var wpFileInput = $('wpFileInput');
+    var wpUploadArea = $('wpUploadArea');
+    var wpCustomPreview = $('wpCustomPreview');
+    var wpCustomPreviewImg = $('wpCustomPreviewImg');
+
+    var exportBtn = $('exportBtn');
+    var importTriggerBtn = $('importTriggerBtn');
+    var importArea = $('importArea');
+    var importFileInput = $('importFileInput');
+    var importResult = $('importResult');
+
+    var authOverlay = $('authOverlay');
+    var authToggleBtn = $('authToggleBtn');
+    var authTitle = $('authTitle');
+    var authSub = $('authSub');
+    var authEmail = $('authEmail');
+    var authPassword = $('authPassword');
+    var authSubmitBtn = $('authSubmitBtn');
+    var authSwitchLink = $('authSwitchLink');
+    var authSwitchText = $('authSwitchText');
+    var authError = $('authError');
+    var authGuestBtn = $('authGuestBtn');
+
+    var chatMessages = $('chatMessages');
+    var chatInput = $('chatInput');
+    var chatSendBtn = $('chatSendBtn');
+    var aiNewChatBtn = $('aiNewChatBtn');
+    var aiSessionLabel = $('aiSessionLabel');
+    var homeSearchResults = $('homeSearchResults');
+    var archiveList = $('archiveList');
+    var archiveCount = $('archiveCount');
+
+    var dailyReminder = $('dailyReminder');
+    var reminderClose = $('reminderClose');
+
+    var mobileBadge = $('mobileBadge');
+    var tabItems = document.querySelectorAll('.tab-item');
+    var tabContents = document.querySelectorAll('.tab-content');
+    var navItems = document.querySelectorAll('.nav-item');
+    var searchHeaderBtn = $('searchHeaderBtn');
+
+    function switchTab(tabName) {
+      tabContents.forEach(function(el) {
+        el.classList.toggle('active', el.dataset.tab === tabName);
+      });
+      var homeDerived = (tabName === 'search');
+      var aiDerived = (tabName === 'archive');
+      tabItems.forEach(function(el) {
+        el.classList.toggle('active', el.dataset.tab === tabName ||
+          (homeDerived && el.dataset.tab === 'home') ||
+          (aiDerived && el.dataset.tab === 'ai'));
+      });
+      navItems.forEach(function(el) {
+        el.classList.toggle('active', el.dataset.tab === tabName ||
+          (homeDerived && el.dataset.tab === 'home') ||
+          (aiDerived && el.dataset.tab === 'ai'));
+      });
+      if (tabName === 'archive') renderArchive();
+      if (window.innerWidth <= 768) {
+        window.scrollTo(0, 0);
+      }
+      if (tabName === 'search' && searchInput) {
+        setTimeout(function() { searchInput.focus(); }, 60);
+      }
+      if (tabName === 'ai' && chatInput) {
+        setTimeout(function() { chatInput.focus(); }, 60);
+      }
+    }
+
+    tabItems.forEach(function(item) {
+      item.addEventListener('click', function(e) {
+        var tab = this.dataset.tab;
+        switchTab(tab);
+        e.preventDefault();
+      });
+    });
+    navItems.forEach(function(item) {
+      item.addEventListener('click', function(e) {
+        var tab = this.dataset.tab;
+        switchTab(tab);
+        e.preventDefault();
+      });
+    });
+
+    var brandEl = document.querySelector('.brand');
+    if (brandEl) {
+      brandEl.addEventListener('click', function() {
+        switchTab('home');
+      });
+    }
+
+    if (searchHeaderBtn) {
+      searchHeaderBtn.addEventListener('click', function() {
+        switchTab('search');
+        setTimeout(function() { if (searchInput) searchInput.focus(); }, 60);
+      });
+    }
+    function loadChatSession(sessionId) {
+      for (var i = 0; i < chatSessions.length; i++) {
+        if (chatSessions[i].id === sessionId) {
+          activeSessionId = sessionId;
+          renderChatSession(chatSessions[i]);
+          switchTab('ai');
+          if (aiSessionLabel) aiSessionLabel.textContent = chatSessions[i].title || '对话';
+          return;
+        }
+      }
+    }
+
+    window.addEventListener('resize', function() {
+      isMobile = window.innerWidth <= 768;
+    });
+
+    function escapeHTML(s) {
+      var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+      return s.replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+
+    function formatTime(iso) {
+      var d = new Date(iso);
+      return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+
+    function formatDateLabel(iso) {
+      var d = new Date(iso);
+      var today = new Date();
+      var yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      if (d.toDateString() === today.toDateString()) return '今天';
+      if (d.toDateString() === yesterday.toDateString()) return '昨天';
+      return d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function getTodayStr() {
+      var d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function localDateOf(iso) {
+      var d = new Date(iso);
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function isToday(iso) {
+      return localDateOf(iso) === getTodayStr();
+    }
+
+    function generateId() {
+      return 'REC_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    }
+
+    function showFeedback(msg) {
+      if (!saveFeedback) return;
+      saveFeedback.textContent = msg;
+      saveFeedback.classList.add('show');
+      clearTimeout(window._feedbackTimer);
+      window._feedbackTimer = setTimeout(function() {
+        if (saveFeedback) saveFeedback.classList.remove('show');
+      }, 1500);
+    }
+
+    function updateSyncStatusUI(status, label) {
+      if (!syncStatus) return;
+      syncStatus.className = 'sync-status ' + status;
+      syncStatus.innerHTML = '<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;"></span> ' + label;
+    }
+
+    function getSafeStorage() {
+      try {
+        localStorage.setItem('__glint_storage_probe__', '1');
+        localStorage.removeItem('__glint_storage_probe__');
+        return localStorage;
+      } catch (e) {
+        var mem = {};
+        return {
+          getItem: function (k) { return (k in mem) ? mem[k] : null; },
+          setItem: function (k, v) { mem[k] = String(v); },
+          removeItem: function (k) { delete mem[k]; }
+        };
+      }
+    }
+
+    function showSyncError(msg) {
+      if (syncCheckResult) {
+        syncCheckResult.textContent = msg;
+        syncCheckResult.style.color = '#d9534f';
+      }
+    }
+    function clearSyncError() {
+      if (syncCheckResult) {
+        syncCheckResult.textContent = '';
+        syncCheckResult.style.color = '';
+      }
+    }
+
+    function initSupabase(cb) {
+      cb = cb || function () {};
+      var url = config.sbUrl || sbUrl.value;
+      var key = config.sbKey || sbKey.value;
+      if (!url || !key) {
+        syncEnabled = false;
+        updateSyncStatusUI('offline', '本地');
+        clearSyncError();
+        cb(false);
+        return;
+      }
+      if (supabase && supabase._glintUrl === url && supabase._glintKey === key && syncEnabled) {
+        cb(true);
+        return;
+      }
+      clearSyncError();
+      window.__ensureSupabaseSdk(function (ok) {
+        if (!ok) {
+          syncEnabled = false;
+          updateSyncStatusUI('offline', '离线');
+          showSyncError('Supabase SDK 未能加载（网络受限？），请检查网络后重试');
+          cb(false);
+          return;
+        }
+        try {
+          var client = window.supabase.createClient(url, key, {
+            auth: {
+              flowType: 'pkce',
+              detectSessionInUrl: false,
+              storage: getSafeStorage(),
+              autoRefreshToken: true,
+              persistSession: true
+            }
+          });
+          client._glintUrl = url;
+          client._glintKey = key;
+          supabase = client;
+          syncEnabled = true;
+          updateSyncStatusUI('online', '云端');
+          checkAuthSession();
+          cb(true);
+        } catch (e) {
+          syncEnabled = false;
+          supabase = null;
+          updateSyncStatusUI('offline', '离线');
+          showSyncError('Supabase 初始化失败：' + (e.message || e));
+          cb(false);
+        }
+      });
+    }
+
+    function ensureSupabaseReady() {
+      return new Promise(function (resolve) {
+        initSupabase(function (ok) { resolve(ok); });
+      });
+    }
+
+    var authMode = 'login';
+    function setAuthMode(mode) {
+      authMode = mode;
+      if (mode === 'login') {
+        authTitle.textContent = '登录';
+        authSub.textContent = '使用邮箱登录以跨设备同步';
+        authSubmitBtn.textContent = '登录';
+        authSwitchText.textContent = '还没有账号？';
+        authSwitchLink.textContent = '注册';
+      } else {
+        authTitle.textContent = '注册';
+        authSub.textContent = '创建账号，开始云端同步';
+        authSubmitBtn.textContent = '注册';
+        authSwitchText.textContent = '已有账号？';
+        authSwitchLink.textContent = '登录';
+      }
+      authError.classList.remove('show');
+      authError.textContent = '';
+    }
+
+    authSwitchLink.addEventListener('click', function() {
+      setAuthMode(authMode === 'login' ? 'register' : 'login');
+    });
+
+    async function handleAuth() {
+      var email = authEmail.value.trim();
+      var password = authPassword.value.trim();
+      
+      if (!(config.sbUrl || sbUrl.value.trim()) || !(config.sbKey || sbKey.value.trim())) {
+        authError.textContent = '请先在设置中配置 Supabase URL 和 Key';
+        authError.classList.add('show');
+        settingsOverlay.classList.add('open');
+        return;
+      }
+      
+      if (!email || !password) {
+        authError.textContent = '请填写邮箱和密码';
+        authError.classList.add('show');
+        return;
+      }
+      if (password.length < 6) {
+        authError.textContent = '密码至少6位';
+        authError.classList.add('show');
+        return;
+      }
+
+      authError.classList.remove('show');
+      authSubmitBtn.disabled = true;
+      authSubmitBtn.textContent = '处理中...';
+
+      try {
+        var ready = await ensureSupabaseReady();
+        if (!ready) throw new Error('Supabase 初始化失败，请检查配置');
+
+        var result;
+        if (authMode === 'login') {
+          result = await supabase.auth.signInWithPassword({ email: email, password: password });
+        } else {
+          result = await supabase.auth.signUp({ email: email, password: password });
+        }
+
+        if (result.error) throw result.error;
+
+        if (authMode === 'register' && !result.data.session) {
+          authError.textContent = '注册成功！请查收确认邮件后登录';
+          authError.classList.add('show');
+          setAuthMode('login');
+          return;
+        }
+
+        if (result.data.session) {
+          currentUser = result.data.session.user;
+          window._authDismissed = false;
+          authOverlay.classList.remove('open');
+          authToggleBtn.innerHTML = '<svg class="ico-sm" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>' + escapeHTML(currentUser.email).slice(0, 8) + '…</span>';
+          updateSyncStatusUI('online', '已登录');
+          await loadFromCloud();
+          renderRecords();
+          renderSummary();
+          showFeedback('已同步');
+        }
+      } catch (e) {
+        authError.textContent = e.message || '认证失败，请重试';
+        authError.classList.add('show');
+      }
+
+      authSubmitBtn.disabled = false;
+      authSubmitBtn.textContent = authMode === 'login' ? '登录' : '注册';
+    }
+
+    authSubmitBtn.addEventListener('click', handleAuth);
+    authPassword.addEventListener('keydown', function(e) { if (e.key === 'Enter') handleAuth(); });
+    authEmail.addEventListener('keydown', function(e) { if (e.key === 'Enter') authPassword.focus(); });
+
+    authToggleBtn.addEventListener('click', function() {
+      if (currentUser) {
+        if (confirm('确定要退出登录吗？本地数据不会丢失。')) {
+          if (supabase) supabase.auth.signOut();
+          currentUser = null;
+          window._authDismissed = false;
+          authToggleBtn.innerHTML = '<svg class="ico-sm" viewBox="0 0 24 24"><path d="M21 2l-2 2m-1.5 1.5L14 9l-3 3-4-4-5 5 1.5 1.5M7 17l4 4 1-1-1-1 2-2-1-1 1-1"/></svg><span>登录</span>';
+          updateSyncStatusUI('offline', (config.sbUrl && config.sbKey) ? '未登录' : '本地');
+          showFeedback('已退出');
+        }
+        return;
+      }
+      if (!(config.sbUrl || sbUrl.value.trim()) || !(config.sbKey || sbKey.value.trim())) {
+        alert('请先在设置中配置 Supabase 同步');
+        settingsOverlay.classList.add('open');
+        return;
+      }
+      setAuthMode('login');
+      authEmail.value = '';
+      authPassword.value = '';
+      authError.classList.remove('show');
+      authOverlay.classList.add('open');
+    });
+
+    authGuestBtn.addEventListener('click', function() {
+      authOverlay.classList.remove('open');
+      currentUser = null;
+      window._authDismissed = true;
+      updateSyncStatusUI('offline', (config.sbUrl && config.sbKey) ? '未登录·本地' : '本地');
+      showFeedback('仅本地使用，不会同步');
+    });
+
+    async function checkAuthSession() {
+      if (!supabase) return;
+      try {
+        var sessionData = await supabase.auth.getSession();
+        if (sessionData.data && sessionData.data.session && sessionData.data.session.user) {
+          currentUser = sessionData.data.session.user;
+          authToggleBtn.innerHTML = '<svg class="ico-sm" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>' + escapeHTML(currentUser.email).slice(0, 8) + '…</span>';
+          updateSyncStatusUI('online', '已登录');
+          await loadFromCloud();
+          renderRecords();
+          renderSummary();
+        } else {
+          currentUser = null;
+          authToggleBtn.innerHTML = '<svg class="ico-sm" viewBox="0 0 24 24"><path d="M21 2l-2 2m-1.5 1.5L14 9l-3 3-4-4-5 5 1.5 1.5M7 17l4 4 1-1-1-1 2-2-1-1 1-1"/></svg><span>登录</span>';
+          if (config.sbUrl && config.sbKey) {
+            updateSyncStatusUI('offline', '未登录');
+            setAuthMode('login');
+            authEmail.value = '';
+            authPassword.value = '';
+            authError.classList.remove('show');
+            if (!window._authDismissed) {
+              authOverlay.classList.add('open');
+            }
+          } else {
+            updateSyncStatusUI('offline', '本地');
+          }
+        }
+      } catch (e) {
+        currentUser = null;
+        if (config.sbUrl && config.sbKey) updateSyncStatusUI('offline', '未登录');
+      }
+    }
+
+    async function syncToCloud() {
+      if (!syncEnabled || !supabase || !currentUser) return;
+      try {
+        updateSyncStatusUI('syncing', '同步中');
+        var table = config.sbTable || 'glint_records';
+
+        var pendingDeletes = JSON.parse(load('glint_pending_deletes') || '[]');
+        if (pendingDeletes.length > 0) {
+          var delRes = await supabase.from(table).delete().in('id', pendingDeletes);
+          if (delRes.error) throw delRes.error;
+          persist('glint_pending_deletes', '[]');
+          pendingDeletes = [];
+        }
+
+        var remoteRes = await supabase.from(table).select('id, updated_at').eq('user_id', currentUser.id);
+        if (remoteRes.error) throw remoteRes.error;
+        var remoteById = {};
+        (remoteRes.data || []).forEach(function (r) { remoteById[r.id] = r.updated_at; });
+
+        var dirty = records.filter(function (r) {
+          if (r.user_id && r.user_id !== currentUser.id) return false;
+          var ts = r.updated_at || r.timestamp;
+          return !remoteById[r.id] || new Date(ts) > new Date(remoteById[r.id]);
+        });
+
+        if (dirty.length > 0) {
+          var rows = dirty.map(function (r) {
+            var row = {};
+            for (var k in r) { if (r.hasOwnProperty(k)) row[k] = r[k]; }
+            row.user_id = currentUser.id;
+            row.updated_at = r.updated_at || r.timestamp;
+            return row;
+          });
+          var upRes = await supabase.from(table).upsert(rows, { onConflict: 'id' });
+          if (upRes.error) throw upRes.error;
+          dirty.forEach(function (r) { r.cloudSynced = true; });
+          persist(STORAGE_KEY, JSON.stringify(records));
+        }
+        updateSyncStatusUI('online', '已同步');
+      } catch (e) {
+        updateSyncStatusUI('offline', '离线');
+        showSyncError('同步失败：' + (e.message || e));
+      }
+    }
+
+    async function loadFromCloud() {
+      if (!syncEnabled || !supabase || !currentUser) return;
+      try {
+        updateSyncStatusUI('syncing', '同步中');
+        var table = config.sbTable || 'glint_records';
+        var result = await supabase.from(table).select('*').eq('user_id', currentUser.id);
+        if (result.error) throw result.error;
+
+        var cloud = result.data || [];
+        var cloudById = {};
+        cloud.forEach(function (r) { cloudById[r.id] = r; });
+
+        var merged = [];
+        var seen = {};
+        cloud.forEach(function (r) {
+          var c = {};
+          for (var k in r) { if (r.hasOwnProperty(k)) c[k] = r[k]; }
+          c.updated_at = c.updated_at || c.timestamp;
+          c.cloudSynced = true;
+          merged.push(c);
+          seen[c.id] = true;
+        });
+
+        records.forEach(function (l) {
+          if (seen[l.id]) return;
+          var keep = {};
+          for (var k in l) { if (l.hasOwnProperty(k)) keep[k] = l[k]; }
+          keep.updated_at = keep.updated_at || keep.timestamp;
+          merged.push(keep);
+          seen[keep.id] = true;
+        });
+
+        merged.sort(function (a, b) { return new Date(b.timestamp) - new Date(a.timestamp); });
+        records = merged;
+        persist(STORAGE_KEY, JSON.stringify(records));
+        renderRecords();
+        renderSummary();
+        updateMobileBadge();
+        updateSyncStatusUI('online', '已同步');
+      } catch (e) {
+        updateSyncStatusUI('offline', '离线');
+        showSyncError('拉取云端失败：' + (e.message || e));
+      }
+    }
+
+    function applyWallpaper(wpClass, customDataUrl) {
+      var classes = document.body.className.split(' ').filter(function(c) { return c.indexOf('wp-') !== 0; });
+      document.body.className = classes.join(' ');
+
+      if (wpClass === 'wp-custom' && customDataUrl) {
+        document.body.classList.add('wp-custom');
+        document.body.style.setProperty('--wallpaper-img', 'url(' + customDataUrl + ')');
+      } else {
+        document.body.classList.add(wpClass);
+        document.body.style.setProperty('--wallpaper-img', 'none');
+      }
+      config.wallpaper = wpClass;
+      if (wpClass === 'wp-custom') {
+        config.customWallpaper = customDataUrl || '';
+      }
+      persist(CONFIG_KEY, JSON.stringify(config));
+
+      document.querySelectorAll('.wp-option').forEach(function(el) {
+        el.classList.toggle('active', el.dataset.wp === wpClass);
+      });
+      if (wpClass === 'wp-custom' && customDataUrl) {
+        wpCustomPreview.style.display = 'flex';
+        wpCustomPreviewImg.src = customDataUrl;
+        wpCustomPreview.classList.add('active');
+      } else {
+        wpCustomPreview.style.display = 'none';
+      }
+    }
+
+    wpFileInput.addEventListener('change', function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        var dataUrl = ev.target.result;
+        applyWallpaper('wp-custom', dataUrl);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    wpUploadArea.addEventListener('click', function() { wpFileInput.click(); });
+
+    document.querySelectorAll('.wp-option[data-wp]').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var wp = this.dataset.wp;
+        if (wp === 'wp-custom') {
+          if (config.customWallpaper) applyWallpaper('wp-custom', config.customWallpaper);
+          else wpFileInput.click();
+          return;
+        }
+        applyWallpaper(wp, null);
+      });
+    });
+
+    function applyConfig() {
+      document.title = config.title + ' · 万物集 / ELEARCH';
+      titleDisplay.textContent = config.title;
+      if (heroMark) heroMark.textContent = config.title;
+      titleInput.value = config.title;
+
+      if (config.wallpaper === 'wp-custom' && config.customWallpaper) {
+        applyWallpaper('wp-custom', config.customWallpaper);
+      } else {
+        applyWallpaper(config.wallpaper || 'wp-default', null);
+      }
+
+      aiEndpoint.value = config.aiEndpoint || '';
+      aiKey.value = config.aiKey || '';
+      aiModel.value = config.aiModel || 'gpt-4o-mini';
+      aiPrompt.value = config.aiPrompt || defaultConfig.aiPrompt;
+      sbUrl.value = config.sbUrl || '';
+      sbKey.value = config.sbKey || '';
+      sbTable.value = config.sbTable || 'glint_records';
+
+      initSupabase();
+      checkAuthSession();
+    }
+
+    function saveConfig() {
+      config.title = titleInput.value.trim() || 'GLINT';
+      config.aiEndpoint = aiEndpoint.value.trim();
+      config.aiKey = aiKey.value.trim();
+      config.aiModel = aiModel.value.trim() || 'gpt-4o-mini';
+      config.aiPrompt = aiPrompt.value.trim() || defaultConfig.aiPrompt;
+      config.sbUrl = sbUrl.value.trim();
+      config.sbKey = sbKey.value.trim();
+      config.sbTable = sbTable.value.trim() || 'glint_records';
+      persist(CONFIG_KEY, JSON.stringify(config));
+      
+      applyConfig();
+      
+      if (config.sbUrl && config.sbKey) {
+        initSupabase();
+        checkAuthSession();
+        showFeedback('配置已保存，同步已启用');
+      } else {
+        updateSyncStatusUI('offline', '本地');
+        showFeedback('配置已保存');
+      }
+    }
+
+    function saveRecord() {
+      var text = recordInput.value.trim();
+      if (!text) return;
+      var now = new Date();
+      var entry = {
+        id: generateId(),
+        content: text,
+        category: currentCategory,
+        timestamp: now.toISOString(),
+        timeFormatted: formatTime(now.toISOString()),
+        updated_at: now.toISOString(),
+        user_id: currentUser ? currentUser.id : 'local'
+      };
+      records.unshift(entry);
+      persist(STORAGE_KEY, JSON.stringify(records));
+      recordInput.value = '';
+      charCount.textContent = '0';
+      autoGrow(recordInput);
+      renderRecords();
+      renderSummary();
+      showFeedback('已归档 ' + entry.timeFormatted);
+      switchTab('timeline');
+      if (syncEnabled && currentUser) syncToCloud();
+      checkDailyReminder();
+      updateMobileBadge();
+    }
+
+    function deleteRecord(id) {
+      if (!confirm('移出档案（其他设备也会删除）？')) return;
+      records = records.filter(function(r) { return r.id !== id; });
+      persist(STORAGE_KEY, JSON.stringify(records));
+      renderRecords();
+      renderSummary();
+      if (syncEnabled && currentUser) {
+        var pendingDeletes = JSON.parse(load('glint_pending_deletes') || '[]');
+        if (pendingDeletes.indexOf(id) === -1) pendingDeletes.push(id);
+        persist('glint_pending_deletes', JSON.stringify(pendingDeletes));
+        syncToCloud();
+      }
+      updateMobileBadge();
+    }
+    window.deleteRecord = deleteRecord;
+
+    function updateMobileBadge() {
+      if (mobileBadge) {
+        var count = records.length;
+        mobileBadge.textContent = count;
+        mobileBadge.style.display = count > 0 ? 'block' : 'none';
+      }
+    }
+
+    function renderRecords() {
+      var filtered = records;
+      if (currentFilter !== 'ALL') {
+        filtered = filtered.filter(function(r) { return r.category === currentFilter; });
+      }
+      if (searchQuery.trim()) {
+        var q = searchQuery.trim().toLowerCase();
+        filtered = filtered.filter(function(r) { return r.content.toLowerCase().indexOf(q) !== -1; });
+      }
+
+      var prevScrollTop = recordsList.scrollTop;
+      var prevWinY = window.scrollY;
+      var prevPageH = document.documentElement.scrollHeight || 1;
+
+      timelineCount.textContent = filtered.length;
+      recordCountDisplay.textContent = records.length;
+      updateMobileBadge();
+
+      if (filtered.length === 0) {
+        recordsList.innerHTML = '<li class="empty-state">' +
+          '<span class="empty-icon"><svg class="ico-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg></span><br>' +
+          '暂无记录<br>' +
+          '<span style="font-size:9px;color:var(--muted);">回到首页，在对话框中记录你的所见、所闻、所感</span>' +
+        '</li>';
+        return;
+      }
+
+      var groups = {};
+      filtered.forEach(function(r) {
+        var dateKey = r.timestamp.split('T')[0];
+        if (!groups[dateKey]) groups[dateKey] = [];
+        groups[dateKey].push(r);
+      });
+
+      var html = '';
+      var sortedDates = Object.keys(groups).sort(function(a, b) { return b.localeCompare(a); });
+      sortedDates.forEach(function(dateKey) {
+        var items = groups[dateKey].sort(function(a, b) { return b.timestamp.localeCompare(a.timestamp); });
+        var label = formatDateLabel(dateKey + 'T00:00:00');
+        html += '<li class="date-group">' +
+          '<div class="date-label">' + label + ' · ' + items.length + '</div>';
+        items.forEach(function(r) {
+          var icon = CATEGORY_ICONS[r.category] || CATEGORY_ICONS['目之所见'];
+          html += '<div class="record-item" data-record-id="' + escapeHTML(r.id) + '">' +
+            '<div class="record-meta">' +
+              '<span class="record-cat-icon" title="' + escapeHTML(r.category || '') + '">' + icon + '</span>' +
+              '<span class="record-time">' + escapeHTML(r.timeFormatted || '') + '</span>' +
+            '</div>' +
+            '<div class="record-content">' + escapeHTML(r.content) + '</div>' +
+            '<button class="record-delete" data-id="' + escapeHTML(r.id) + '" title="销毁">✕</button>' +
+          '</div>';
+        });
+        html += '</li>';
+      });
+
+      recordsList.innerHTML = html;
+      recordsList.scrollTop = prevScrollTop;
+      var newPageH = document.documentElement.scrollHeight || 1;
+      if (prevPageH > 0 && newPageH > 0 && Math.abs(newPageH - prevPageH) < prevPageH * 0.5) {
+        window.scrollTo(0, Math.round(prevWinY * (newPageH / prevPageH)));
+      } else {
+        window.scrollTo(0, prevWinY);
+      }
+    }
+
+    recordsList.addEventListener('click', function(e) {
+      var target = e.target;
+      while (target && target !== recordsList && !(target.classList && target.classList.contains('record-delete'))) {
+        target = target.parentNode;
+      }
+      if (target && target !== recordsList && target.classList && target.classList.contains('record-delete')) {
+        deleteRecord(target.getAttribute('data-id'));
+      }
+    });
+
+    function renderSummary() {
+      statTotal.textContent = records.length;
+      var todayRecords = records.filter(function(r) { return isToday(r.timestamp); });
+      statToday.textContent = todayRecords.length;
+
+      var catCount = {};
+      records.forEach(function(r) {
+        catCount[r.category] = (catCount[r.category] || 0) + 1;
+      });
+      var total = records.length;
+
+      var catHtml = '';
+      var sortedCats = [];
+      for (var cat in catCount) {
+        if (catCount.hasOwnProperty(cat)) {
+          sortedCats.push([cat, catCount[cat]]);
+        }
+      }
+      sortedCats.sort(function(a, b) { return b[1] - a[1]; });
+      
+      sortedCats.forEach(function(item) {
+        var cat = item[0];
+        var count = item[1];
+        var pct = total > 0 ? Math.round((count / total) * 100) : 0;
+        var icon = CATEGORY_ICONS[cat] || '';
+        catHtml += '<span class="cat-tag">' + icon + ' ' + escapeHTML(cat) + ' <span class="count">' + count + '</span> (' + pct + '%)</span>';
+      });
+
+      var periodLabels = { day: '今日', week: '本周', month: '本月' };
+      var label = periodLabels[currentPeriod] || '';
+
+      summaryOutput.innerHTML = 
+        '<div style="font-weight:600;font-family:var(--mono);font-size:11px;letter-spacing:0.04em;margin-bottom:8px;">' +
+          label + ' · ' + total + ' 条流水' +
+        '</div>' +
+        '<div class="summary-category-list">' + (catHtml || '<span style="color:var(--muted);font-size:11px;">暂无数据</span>') + '</div>' +
+        '<div style="margin-top:10px;font-size:11px;color:var(--muted);">' +
+          (total > 0 ? '主要流向：' + (sortedCats[0] ? sortedCats[0][0] : '无') : '尚未建立人生轨迹') +
+        '</div>';
+    }
+
+    function generateSummary() {
+      if (records.length === 0) {
+        summaryOutput.innerHTML = '<div style="color:var(--muted);font-size:11px;">暂无记录，无法建立映射</div>';
+        return;
+      }
+
+      var now = new Date();
+      var periodRecords = records;
+
+      if (currentPeriod === 'day') {
+        var todayStr = getTodayStr();
+        periodRecords = records.filter(function(r) { return r.timestamp.indexOf(todayStr) === 0; });
+      } else if (currentPeriod === 'week') {
+        var weekAgo = new Date(now);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        periodRecords = records.filter(function(r) { return new Date(r.timestamp) >= weekAgo; });
+      } else if (currentPeriod === 'month') {
+        var monthAgo = new Date(now);
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        periodRecords = records.filter(function(r) { return new Date(r.timestamp) >= monthAgo; });
+      }
+
+      if (periodRecords.length === 0) {
+        summaryOutput.innerHTML = '<div style="color:var(--muted);font-size:11px;">该时段内无记录</div>';
+        return;
+      }
+
+      var catCount = {};
+      periodRecords.forEach(function(r) {
+        catCount[r.category] = (catCount[r.category] || 0) + 1;
+      });
+      var sortedCats = [];
+      for (var cat in catCount) {
+        if (catCount.hasOwnProperty(cat)) {
+          sortedCats.push([cat, catCount[cat]]);
+        }
+      }
+      sortedCats.sort(function(a, b) { return b[1] - a[1]; });
+      
+      var dominant = sortedCats[0] ? sortedCats[0][0] : '无';
+      var dominantPct = sortedCats[0] ? Math.round((sortedCats[0][1] / periodRecords.length) * 100) : 0;
+
+      var insights = [];
+      if (periodRecords.length > 8) insights.push('记录密度较高');
+      if (dominant === '目之所见' || dominant === '世间所遇') insights.push('外部感知活跃');
+      if (dominant === '心之所想' || dominant === '身之所感') insights.push('内在觉察明显');
+      if (periodRecords.length <= 3) insights.push('记录偏少，节奏平缓');
+
+      var periodLabels = { day: '今日', week: '本周', month: '本月' };
+      var label = periodLabels[currentPeriod] || '';
+
+      var recordPreview = '';
+      var previewItems = periodRecords.slice(0, 3);
+      previewItems.forEach(function(r) {
+        var content = escapeHTML((r.content || '').slice(0, 36)) + ((r.content || '').length > 36 ? '…' : '');
+        recordPreview += '· ' + content + '<br>';
+      });
+      if (periodRecords.length > 3) {
+        recordPreview += '<br><span style="color:var(--muted);">… 还有 ' + (periodRecords.length - 3) + ' 条</span>';
+      }
+
+      summaryOutput.innerHTML = 
+        '<div style="font-weight:600;font-family:var(--mono);font-size:11px;letter-spacing:0.04em;margin-bottom:8px;">' +
+          label + ' · ' + periodRecords.length + ' 条' +
+        '</div>' +
+        '<div style="font-size:12px;line-height:1.9;">' +
+          '<div>主要流向：<strong>' + dominant + '</strong> (' + dominantPct + '%)</div>' +
+          '<div style="font-size:11px;color:var(--muted);margin-top:6px;">' +
+            insights.join(' · ') +
+          '</div>' +
+          '<div style="margin-top:10px;font-size:11px;color:var(--muted);border-top:1px solid color-mix(in srgb, var(--border) 40%, transparent);padding-top:10px;">' +
+            recordPreview +
+          '</div>' +
+        '</div>';
+    }
+
+    function exportData() {
+      if (records.length === 0) {
+        alert('没有记录可导出');
+        return;
+      }
+      var data = {
+        version: '1.0',
+        exportedAt: new Date().toISOString(),
+        count: records.length,
+        records: records
+      };
+      var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'glint_export_' + getTodayStr() + '.json';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function() { URL.revokeObjectURL(url); document.body.removeChild(a); }, 1000);
+      showFeedback('已导出 ' + records.length + ' 条');
+    }
+
+    function importData(file) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          var data = JSON.parse(e.target.result);
+          var imported = 0;
+          var skipped = 0;
+
+          if (!data.records || !Array.isArray(data.records)) {
+            throw new Error('无效的格式：缺少 records 数组');
+          }
+
+          var existingIds = new Set(records.map(function(r) { return r.id; }));
+
+          data.records.forEach(function(r) {
+            if (!r.id || !r.content || !r.category) return;
+            if (existingIds.has(r.id)) {
+              skipped++;
+              return;
+            }
+            if (!r.timestamp) r.timestamp = new Date().toISOString();
+            if (!r.timeFormatted) r.timeFormatted = formatTime(r.timestamp);
+            if (!r.updated_at) r.updated_at = r.timestamp || new Date().toISOString();
+            r.cloudSynced = false;
+            if (!r.user_id) r.user_id = currentUser ? currentUser.id : 'local';
+            records.push(r);
+            existingIds.add(r.id);
+            imported++;
+          });
+
+          records.sort(function(a, b) { return new Date(b.timestamp) - new Date(a.timestamp); });
+          persist(STORAGE_KEY, JSON.stringify(records));
+          renderRecords();
+          renderSummary();
+
+          importResult.textContent = '导入成功：新增 ' + imported + ' 条，跳过 ' + skipped + ' 条';
+          importResult.className = 'import-result show success';
+          if (syncEnabled && currentUser) syncToCloud();
+          showFeedback('已导入 ' + imported + ' 条');
+          updateMobileBadge();
+        } catch (err) {
+          importResult.textContent = '导入失败：' + err.message;
+          importResult.className = 'import-result show error';
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    exportBtn.addEventListener('click', exportData);
+    importTriggerBtn.addEventListener('click', function() { importFileInput.click(); });
+    importArea.addEventListener('click', function() { importFileInput.click(); });
+    importFileInput.addEventListener('change', function(e) {
+      if (this.files && this.files[0]) {
+        importData(this.files[0]);
+        this.value = '';
+      }
+    });
+
+    function addChatMessage(role, content) {
+      var div = document.createElement('div');
+      div.className = 'chat-msg ' + role;
+      var time = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+      div.innerHTML = escapeHTML(content) + '<span class="msg-time">' + time + '</span>';
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      return div;
+    }
+
+    function updateChatMessage(el, content) {
+      var time = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+      el.innerHTML = escapeHTML(content) + '<span class="msg-time">' + time + '</span>';
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function saveChatSessions() {
+      persist(CHAT_KEY, JSON.stringify(chatSessions));
+    }
+    function getActiveSession() {
+      if (!activeSessionId) return null;
+      for (var i = 0; i < chatSessions.length; i++) {
+        if (chatSessions[i].id === activeSessionId) return chatSessions[i];
+      }
+      return null;
+    }
+    function ensureActiveSession() {
+      var s = getActiveSession();
+      if (s) return s;
+      var id = 'CHAT_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      s = { id: id, title: '新对话', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), messages: [] };
+      chatSessions.unshift(s);
+      activeSessionId = id;
+      saveChatSessions();
+      return s;
+    }
+    function getSessionTitle(session) {
+      if (session.messages.length === 0) return '新对话';
+      var first = session.messages[0].content || '';
+      return first.length > 24 ? first.slice(0, 24) + '…' : first;
+    }
+    function renderChatSession(session) {
+      chatMessages.innerHTML = '';
+      if (!session.messages.length) {
+        var welcome = document.createElement('div');
+        welcome.className = 'chat-msg assistant';
+        welcome.innerHTML = '我是你的档案助理，可以帮你检索记录，也可以陪你聊聊。<span class="msg-time">想问什么，或是想说什么，都可以</span>';
+        chatMessages.appendChild(welcome);
+      } else {
+        session.messages.forEach(function(m) {
+          addChatMessage(m.role, m.content);
+        });
+      }
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    function createNewChat() {
+      activeSessionId = null;
+      var s = ensureActiveSession();
+      if (aiSessionLabel) aiSessionLabel.textContent = '新对话';
+      renderChatSession(s);
+      if (chatInput) chatInput.focus();
+      if (archiveList) renderArchive();
+    }
+    if (aiNewChatBtn) {
+      aiNewChatBtn.addEventListener('click', createNewChat);
+    }
+    var aiHistoryBtn = $('aiHistoryBtn');
+    if (aiHistoryBtn) {
+      aiHistoryBtn.addEventListener('click', function() { switchTab('archive'); });
+    }
+    var archiveBackBtn = $('archiveBackBtn');
+    if (archiveBackBtn) {
+      archiveBackBtn.addEventListener('click', function() { switchTab('ai'); });
+    }
+
+    function renderArchive() {
+      if (!archiveList) return;
+      if (archiveCount) archiveCount.textContent = chatSessions.length;
+      if (!chatSessions.length) {
+        archiveList.innerHTML = '<div class="archive-empty">还没有对话。<br>回到「档案助理」里问点什么吧。</div>';
+        return;
+      }
+      var html = '';
+      chatSessions.forEach(function(s) {
+        var title = getSessionTitle(s);
+        var msgCount = s.messages ? s.messages.length : 0;
+        var lastStr = s.updatedAt ? formatDateLabel(s.updatedAt) + ' ' + (s.updatedAt.slice(11, 16) || '') : '';
+        html += '<div class="archive-item" data-sid="' + escapeHTML(s.id) + '">' +
+          '<span class="archive-icon">' +
+            '<svg class="ico" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+          '</span>' +
+          '<div class="archive-main">' +
+            '<div class="archive-title">' + escapeHTML(title) + '</div>' +
+            '<div class="archive-meta">' + msgCount + ' 条消息 · ' + escapeHTML(lastStr) + '</div>' +
+          '</div>' +
+          '<button class="archive-delete" data-del="' + escapeHTML(s.id) + '" title="删除这段对话">✕</button>' +
+        '</div>';
+      });
+      archiveList.innerHTML = html;
+    }
+    if (archiveList) {
+      archiveList.addEventListener('click', function(e) {
+        var delBtn = e.target.closest ? e.target.closest('.archive-delete') : null;
+        if (delBtn) {
+          var did = delBtn.getAttribute('data-del');
+          if (confirm('删除这段对话及其历史？')) {
+            chatSessions = chatSessions.filter(function(s) { return s.id !== did; });
+            if (activeSessionId === did) activeSessionId = null;
+            saveChatSessions();
+            renderArchive();
+          }
+          return;
+        }
+        var item = e.target.closest ? e.target.closest('.archive-item') : null;
+        if (item) loadChatSession(item.getAttribute('data-sid'));
+      });
+    }
+
+    function normalizeAIEndpoint(raw) {
+      if (!raw) return '';
+      var url = raw.trim().replace(/\/+$/, '');
+
+      if (/\/chat\/completions$/.test(url)) return url;
+      if (/\/v1$/.test(url)) return url + '/chat/completions';
+      if (/\/api\/paas\/v4$/.test(url)) return url + '/chat/completions';
+      if (/\/compatible-mode\/v1$/.test(url)) return url + '/chat/completions';
+      return url + '/v1/chat/completions';
+    }
+
+    // v6: 档案助理 —— 背景记录数提升至 120 条
+    function buildRecordContext() {
+      if (records.length === 0) {
+        return '用户目前还没有留下任何记录。如果用户问起记录相关内容，可以温和地提醒他先去首页记一笔。';
+      }
+      var recent = records.slice(0, ASSISTANT_RECORD_LIMIT);
+      var ctx = '以下是用户在万物集中留下的生活记录（按时间倒序，最多 ' + ASSISTANT_RECORD_LIMIT + ' 条），供你检索、回顾、归纳与总结：\n';
+      recent.forEach(function(r) {
+        var d = new Date(r.timestamp);
+        var dateStr = (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + formatTime(r.timestamp);
+        ctx += '· [' + (r.category || '未分类') + '] ' + dateStr + ' — ' + (r.content || '') + '\n';
+      });
+      ctx += '\n使用说明：当用户的问题与记录相关时，优先基于它们回答，并尽量引用原始语句；当用户只是想聊天时，忽略它们即可。如果记录中没有相关信息，坦诚说明，不要编造。';
+      return ctx;
+    }
+
+    async function sendChatMessage() {
+      var msg = chatInput.value.trim();
+      if (!msg) return;
+      var oldHints = chatMessages.querySelectorAll('.config-hint');
+      for (var i = 0; i < oldHints.length; i++) oldHints[i].parentNode.removeChild(oldHints[i]);
+      chatInput.value = '';
+      chatInput.disabled = true;
+      chatSendBtn.disabled = true;
+
+      var session = ensureActiveSession();
+      session.messages.push({ role: 'user', content: msg, time: new Date().toISOString() });
+      session.updatedAt = new Date().toISOString();
+      session.title = getSessionTitle(session);
+      saveChatSessions();
+      if (aiSessionLabel) aiSessionLabel.textContent = session.title;
+
+      addChatMessage('user', msg);
+
+      var placeholder = addChatMessage('assistant', '正在整理思路...');
+
+      try {
+        var endpoint = normalizeAIEndpoint(config.aiEndpoint);
+        var key = config.aiKey;
+        var model = config.aiModel || 'gpt-4o-mini';
+
+        if (!endpoint || !key) {
+          updateChatMessage(placeholder, '请先在设置中配置 AI 服务（右上角 ⚙️ → ❹ 档案助理 · AI 接口，填写 Endpoint 与 Key）。');
+          placeholder.className += ' config-hint';
+          return;
+        }
+
+        var systemPrompt = config.aiPrompt || defaultConfig.aiPrompt;
+        var recordContext = buildRecordContext();
+
+        var messages = [
+          { role: 'system', content: systemPrompt + '\n\n' + recordContext }
+        ];
+        var hist = session.messages;
+        for (var i = Math.max(0, hist.length - 10); i < hist.length; i++) {
+          messages.push({ role: hist[i].role, content: hist[i].content });
+        }
+
+        var response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + key
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: messages,
+            max_tokens: 800,
+            temperature: 0.7
+          })
+        });
+
+        if (!response.ok) {
+          var errText = await response.text();
+          throw new Error('API 响应错误 (' + response.status + '): ' + errText.slice(0, 200));
+        }
+
+        var data = await response.json();
+        var reply = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '无回复内容。';
+        updateChatMessage(placeholder, reply);
+        session.messages.push({ role: 'assistant', content: reply, time: new Date().toISOString() });
+        session.updatedAt = new Date().toISOString();
+        session.title = getSessionTitle(session);
+        saveChatSessions();
+        if (aiSessionLabel) aiSessionLabel.textContent = session.title;
+
+      } catch (e) {
+        var hint = '';
+        var errMsg = String(e.message || e);
+        if (errMsg.indexOf('404') !== -1) {
+          hint = '\n\n可能原因：\n' +
+                 '① Endpoint 不完整，请填到 .../v1/chat/completions；\n' +
+                 '② Model 名称写错；\n' +
+                 '③ 该服务商不支持 OpenAI 兼容格式。';
+        } else if (errMsg.indexOf('401') !== -1 || errMsg.indexOf('403') !== -1) {
+          hint = '\n\n可能原因：API Key 无效或权限不足。';
+        } else if (errMsg.indexOf('429') !== -1) {
+          hint = '\n\n可能原因：请求频率超限或余额不足。';
+        } else if (errMsg.indexOf('Failed to fetch') !== -1 || errMsg.indexOf('NetworkError') !== -1) {
+          hint = '\n\n可能原因：网络不通，或该 API 不允许浏览器直接跨域调用（CORS）。\n' +
+                 '可尝试换用支持浏览器直连的服务商，或通过后端代理。';
+        }
+        updateChatMessage(placeholder, '调取失败: ' + errMsg + hint);
+      } finally {
+        chatInput.disabled = false;
+        chatSendBtn.disabled = false;
+        chatInput.focus();
+      }
+    }
+
+    chatSendBtn.addEventListener('click', sendChatMessage);
+    chatInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChatMessage();
+      }
+    });
+
+    function checkDailyReminder() {
+      var todayStr = getTodayStr();
+      var todayRecords = records.filter(function(r) { return r.timestamp.indexOf(todayStr) === 0; });
+      var hasBeenShown = load('glint_reminder_shown_' + todayStr);
+
+      if (todayRecords.length === 0 && !hasBeenShown) {
+        dailyReminder.style.display = 'block';
+      } else {
+        dailyReminder.style.display = 'none';
+      }
+    }
+
+    reminderClose.addEventListener('click', function() {
+      dailyReminder.style.display = 'none';
+      var todayStr = getTodayStr();
+      persist('glint_reminder_shown_' + todayStr, 'true');
+    });
+
+    function renderDate() {
+      var now = new Date();
+      currentDateDisplay.textContent =
+        now.getFullYear() + '.' + String(now.getMonth() + 1).padStart(2, '0') + '.' + String(now.getDate()).padStart(2, '0');
+    }
+
+    categoryContainer.querySelectorAll('.cat-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        categoryContainer.querySelectorAll('.cat-btn').forEach(function(b) { b.classList.remove('active'); });
+        this.classList.add('active');
+        currentCategory = this.dataset.cat;
+        recordInput.placeholder = CATEGORY_PLACEHOLDERS[currentCategory] || '记录下这一刻…';
+        recordInput.focus();
+      });
+    });
+
+    function autoGrow(el) {
+      if (!el) return;
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 180) + 'px';
+    }
+    recordInput.addEventListener('input', function() {
+      charCount.textContent = recordInput.value.length;
+      autoGrow(recordInput);
+    });
+    recordInput.addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        saveRecord();
+        return;
+      }
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+        e.preventDefault();
+        saveRecord();
+      }
+    });
+    saveBtn.addEventListener('click', saveRecord);
+
+    filterBar.querySelectorAll('.filter-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        filterBar.querySelectorAll('.filter-item').forEach(function(f) { f.classList.remove('active'); });
+        this.classList.add('active');
+        currentFilter = this.dataset.filter;
+        renderRecords();
+      });
+    });
+
+    // ===== 搜索：纯粹的字面检索（方案 A：无结果时引导到档案助理） =====
+    function renderHomeSearch() {
+      if (!homeSearchResults) return;
+      var q = searchQuery.trim();
+      if (!q) {
+        homeSearchResults.innerHTML = '<div class="search-res-empty">输入关键词，搜索你的记录与对话</div>';
+        return;
+      }
+      var ql = q.toLowerCase();
+      var hitRecords = records.filter(function(r) {
+        return (r.content && r.content.toLowerCase().indexOf(ql) !== -1) || (r.category && r.category.indexOf(q) !== -1);
+      });
+      var hitChats = [];
+      chatSessions.forEach(function(s) {
+        (s.messages || []).forEach(function(m) {
+          if ((m.content || '').toLowerCase().indexOf(ql) !== -1) {
+            hitChats.push({ sid: s.id, title: s.title || '对话', role: m.role, content: m.content, time: m.time || '' });
+          }
+        });
+      });
+
+      var html = '';
+      if (hitRecords.length) {
+        html += '<div class="search-res-group"><div class="search-res-group-head">流水记录 · ' + hitRecords.length + '</div>';
+        hitRecords.slice(0, 8).forEach(function(r) {
+          html += '<div class="search-res-item" data-rec="' + escapeHTML(r.id) + '">' +
+            '<span class="search-res-time">' + escapeHTML(r.timeFormatted || '') + '</span>' +
+            '<span class="search-res-text">' + escapeHTML(r.content) + '</span>' +
+            '<span class="search-res-cat">' + escapeHTML(r.category || '') + '</span>' +
+          '</div>';
+        });
+        if (hitRecords.length > 8) {
+          html += '<div style="font-size:10px;color:var(--muted);padding:2px 2px 10px;">还有 ' + (hitRecords.length - 8) + ' 条…可回时间线查看</div>';
+        }
+        html += '</div>';
+      }
+      if (hitChats.length) {
+        html += '<div class="search-res-group"><div class="search-res-group-head">对话历史 · ' + hitChats.length + '</div>';
+        hitChats.slice(0, 8).forEach(function(c) {
+          html += '<div class="search-res-item" data-sid="' + escapeHTML(c.sid) + '">' +
+            '<span class="search-res-cat">' + (c.role === 'user' ? '问' : '答') + '</span>' +
+            '<span class="search-res-text">' + escapeHTML(c.content) + '</span>' +
+            '<span class="search-res-time">' + escapeHTML(c.title) + '</span>' +
+          '</div>';
+        });
+        html += '</div>';
+      }
+      if (!hitRecords.length && !hitChats.length) {
+        // v6: 无结果 → 引导到档案助理
+        html = '<div class="search-res-empty">没有找到与「' + escapeHTML(q) + '」相关的内容</div>' +
+          '<div class="ask-assistant-hint">' +
+            '<div class="hint-text">' +
+              '搜索只做<strong>字面匹配</strong>，如果你问的是意思、感受或归纳，' +
+              '可以试试<strong>档案助理</strong>——它能理解你的话。' +
+            '</div>' +
+            '<button class="hint-btn" data-ask="' + escapeHTML(q) + '">' +
+              '<svg class="ico" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><polyline points="9 11 12 8 15 11 12 14"/></svg>' +
+              '<span>去问档案助理</span>' +
+            '</button>' +
+          '</div>';
+      }
+      homeSearchResults.innerHTML = html;
+    }
+
+    if (homeSearchResults) {
+      homeSearchResults.addEventListener('click', function(e) {
+        // v6: 点击「去问档案助理」按钮
+        var askBtn = e.target.closest ? e.target.closest('[data-ask]') : null;
+        if (askBtn) {
+          var q = askBtn.getAttribute('data-ask') || '';
+          // 清空搜索框，避免残留
+          if (searchInput) searchInput.value = '';
+          searchQuery = '';
+          if (searchClear) searchClear.classList.remove('show');
+          renderHomeSearch();
+          // 跳到档案助理，并预填关键词
+          switchTab('ai');
+          setTimeout(function() {
+            if (chatInput) {
+              chatInput.value = q;
+              chatInput.focus();
+              // 光标移到末尾
+              var len = chatInput.value.length;
+              if (chatInput.setSelectionRange) {
+                chatInput.setSelectionRange(len, len);
+              }
+            }
+          }, 100);
+          return;
+        }
+
+        var recEl = e.target.closest ? e.target.closest('[data-rec]') : null;
+        if (recEl) {
+          currentFilter = 'ALL';
+          document.querySelectorAll('.filter-item').forEach(function(f) {
+            f.classList.toggle('active', f.dataset.filter === 'ALL');
+          });
+          var rid = recEl.getAttribute('data-rec');
+          renderRecords();
+          switchTab('timeline');
+          setTimeout(function() {
+            var el = document.querySelector('[data-record-id="' + rid + '"]');
+            if (el) {
+              el.classList.add('flash');
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 80);
+          return;
+        }
+        var sidEl = e.target.closest ? e.target.closest('[data-sid]') : null;
+        if (sidEl) loadChatSession(sidEl.getAttribute('data-sid'));
+      });
+    }
+
+    searchInput.addEventListener('input', function() {
+      searchQuery = this.value;
+      searchClear.classList.toggle('show', !!searchQuery);
+      renderHomeSearch();
+      renderRecords();
+    });
+    searchClear.addEventListener('click', function() {
+      searchInput.value = '';
+      searchQuery = '';
+      this.classList.remove('show');
+      renderHomeSearch();
+      renderRecords();
+      searchInput.focus();
+    });
+
+    document.querySelectorAll('.tab-btn').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.tab-btn').forEach(function(t) { t.classList.remove('active'); });
+        this.classList.add('active');
+        currentPeriod = this.dataset.period;
+        generateSummary();
+      });
+    });
+
+    genSummaryBtn.addEventListener('click', generateSummary);
+    $('quickDayBtn').addEventListener('click', function() {
+      currentPeriod = 'day';
+      document.querySelectorAll('.tab-btn').forEach(function(t) { t.classList.toggle('active', t.dataset.period === 'day'); });
+      generateSummary();
+    });
+    $('quickWeekBtn').addEventListener('click', function() {
+      currentPeriod = 'week';
+      document.querySelectorAll('.tab-btn').forEach(function(t) { t.classList.toggle('active', t.dataset.period === 'week'); });
+      generateSummary();
+    });
+    $('quickMonthBtn').addEventListener('click', function() {
+      currentPeriod = 'month';
+      document.querySelectorAll('.tab-btn').forEach(function(t) { t.classList.toggle('active', t.dataset.period === 'month'); });
+      generateSummary();
+    });
+
+    settingsToggle.addEventListener('click', function() {
+      document.querySelectorAll('.wp-option').forEach(function(el) {
+        el.classList.toggle('active', el.dataset.wp === config.wallpaper);
+      });
+      if (config.wallpaper === 'wp-custom' && config.customWallpaper) {
+        wpCustomPreview.style.display = 'flex';
+        wpCustomPreviewImg.src = config.customWallpaper;
+      }
+      settingsOverlay.classList.toggle('open');
+    });
+    settingsClose.addEventListener('click', function() {
+      saveConfig();
+      settingsOverlay.classList.remove('open');
+    });
+    settingsOverlay.addEventListener('click', function(e) {
+      if (e.target === settingsOverlay) {
+        saveConfig();
+        settingsOverlay.classList.remove('open');
+      }
+    });
+
+    titleDisplay.addEventListener('dblclick', function() {
+      var newTitle = prompt('修改主标题：', config.title);
+      if (newTitle && newTitle.trim()) {
+        config.title = newTitle.trim();
+        persist(CONFIG_KEY, JSON.stringify(config));
+        applyConfig();
+      }
+    });
+
+    renderDate();
+    applyConfig();
+    renderRecords();
+    renderSummary();
+    renderArchive();
+    recordInput.placeholder = CATEGORY_PLACEHOLDERS[currentCategory] || '记录下这一刻…';
+    updateMobileBadge();
+
+    setTimeout(checkDailyReminder, 1500);
+
+    var CREATE_SQL = [
+      '-- GLINT 云端表结构（在 Supabase SQL Editor 中执行一次；如已建旧表请先执行对应 DROP/ALTER 对齐字段）',
+      'create table if not exists public.glint_records (',
+      '  id text primary key,',
+      '  content text not null,',
+      '  category text not null default \'目之所见\',',
+      '  "timestamp" timestamptz not null default now(),',
+      '  "timeFormatted" text,',
+      '  "updated_at" timestamptz not null default now(),',
+      '  user_id uuid not null default auth.uid(),',
+      '  constraint glint_records_user_fk foreign key (user_id) references auth.users(id) on delete cascade',
+      ');',
+      '',
+      'alter table public.glint_records enable row level security;',
+      '',
+      'create policy "glint_select_own" on public.glint_records for select using (auth.uid() = user_id);',
+      'create policy "glint_insert_own" on public.glint_records for insert with check (auth.uid() = user_id);',
+      'create policy "glint_update_own" on public.glint_records for update using (auth.uid() = user_id);',
+      'create policy "glint_delete_own" on public.glint_records for delete using (auth.uid() = user_id);',
+      '',
+      'create index if not exists glint_records_user_time_idx on public.glint_records (user_id, "timestamp" desc);'
+    ].join('\n');
+
+    if (copySqlBtn) {
+      copySqlBtn.addEventListener('click', function () {
+        var msg = '建表 SQL 已复制，请在 Supabase SQL Editor 执行';
+        function fallbackCopy() {
+          var ta = document.createElement('textarea');
+          ta.value = CREATE_SQL;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand('copy'); } catch (e2) {}
+          document.body.removeChild(ta);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(CREATE_SQL).then(function () { showFeedback(msg); }, fallbackCopy);
+        } else {
+          fallbackCopy();
+          showFeedback(msg);
+        }
+      });
+    }
+
+    if (syncCheckBtn) {
+      syncCheckBtn.addEventListener('click', function () {
+        var url = sbUrl.value.trim();
+        var key = sbKey.value.trim();
+        var table = sbTable.value.trim() || 'glint_records';
+        if (!url || !key) {
+          showSyncError('请先填写 Supabase URL 和 anon key');
+          return;
+        }
+        syncCheckResult.style.color = 'var(--muted)';
+        syncCheckResult.textContent = '检测中…';
+        window.__ensureSupabaseSdk(function (ok) {
+          if (!ok) { showSyncError('Supabase SDK 未能加载，请检查网络'); return; }
+          var probe;
+          try {
+            probe = window.supabase.createClient(url, key, {
+              auth: { flowType: 'pkce', detectSessionInUrl: false, storage: getSafeStorage() }
+            });
+          } catch (e) { showSyncError('创建客户端失败：' + (e.message || e)); return; }
+          probe.from(table).select('id').limit(1)
+            .then(function (r) {
+              if (r.error) {
+                var msg = String(r.error.message || '');
+                if (msg.indexOf('Could not find the table') !== -1 || msg.indexOf('relation') !== -1) {
+                  showSyncError('连接 OK，但表 "' + table + '" 不存在。\n请点击上方“复制建表 SQL”，在 Supabase SQL Editor 执行后重试。');
+                } else if (msg.indexOf('row-level security') !== -1 || msg.indexOf('permission denied') !== -1) {
+                  showSyncError('表存在但 RLS 策略拒绝访问。\n请执行上方“复制建表 SQL”中的 RLS 策略，并确认已登录。');
+                } else {
+                  showSyncError('检测失败：' + msg);
+                }
+                return;
+              }
+              syncCheckResult.style.color = 'var(--success)';
+              syncCheckResult.textContent = '✔ 连接成功，表结构可用，可以开始同步了。';
+            })
+            .catch(function (err) { showSyncError('检测请求异常：' + (err.message || err)); });
+        });
+      });
+    }
+
+    setInterval(function() {
+      if (syncEnabled && currentUser) syncToCloud();
+    }, 60000);
+
+    window.addEventListener('beforeunload', function() {
+      if (syncEnabled && currentUser) syncToCloud();
+    });
+
+    // ===== 象览（xianglan）能力申报：宿主注入 window.xianglan 时才注册；单独打开时整段跳过，不影响应用 =====
+    if (window.xianglan && typeof window.xianglan.register === 'function') {
+      var XL_CATS = Object.keys(CATEGORY_ICONS);
+      var XL_DEFAULT_CAT = currentCategory;
+      var XL_QUERY_LIMIT = 100;
+      var XL_EXPORT_LIMIT = 200;
+      var XL_EXPORT_MAX = 500;
+      var XL_CHAT_LIMIT = 10;
+      var XL_MSG_LIMIT = 30;
+      var XL_CLIENT_KEY = 'glint_xianglan_client_ids';
+      var XL_CAT_MSG = '分类必须是：' + XL_CATS.join('/');
+
+      function xlBrief(r) {
+        return { id: r.id, content: r.content, category: r.category, timestamp: r.timestamp, timeFormatted: r.timeFormatted };
+      }
+      function xlLimit(n, def, max) {
+        return (typeof n === 'number' && n > 0) ? Math.min(Math.floor(n), max) : def;
+      }
+      function xlNum(n, def) {
+        return (typeof n === 'number' && n > 0) ? Math.floor(n) : def;
+      }
+      function xlGetClientMap() {
+        try { return JSON.parse(load(XL_CLIENT_KEY) || '{}'); } catch (e) { return {}; }
+      }
+
+      window.xianglan.register({
+        description: 'GLINT 人生流水账：随手记录每天看到、听到、尝到、想到、遇到、收藏的内容，支持检索、统计与云端同步',
+        settings: [
+          { key:'aiEndpoint', label:'接口地址', type:'text', def:'https://api.deepseek.com/v1/chat/completions', hint:'留空则用系统统一配置' },
+          { key:'aiKey', label:'接口 Key', type:'secret', hint:'留空则用系统统一配置（只存宿主，不给 AI 看）' },
+          { key:'aiModel', label:'模型', type:'text', def:'gpt-4o-mini' }
+        ],
+        actions: {
+          query_records: {
+            description: '按条件查询流水记录（只读），全部参数可选，省略时返回最近 20 条',
+            params: {
+              keyword: { type: 'string', description: '内容关键词，模糊匹配，不区分大小写', required: false },
+              category: { type: 'string', description: '分类，六选一：目之所见/耳之所闻/身之所感/心之所想/世间所遇/手中所藏', required: false },
+              date: { type: 'string', description: '日期，格式 YYYY-MM-DD，只返回当天记录', required: false },
+              limit: { type: 'number', description: '返回条数，默认 20，最大 100', required: false }
+            },
+            run: async function (args) {
+              var a = args || {};
+              var list = records;
+              if (a.keyword) {
+                var q = String(a.keyword).toLowerCase();
+                list = list.filter(function (r) { return (r.content || '').toLowerCase().indexOf(q) !== -1; });
+              }
+              if (a.category) {
+                list = list.filter(function (r) { return r.category === a.category; });
+              }
+              if (a.date) {
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(String(a.date))) throw new Error('date 格式应为 YYYY-MM-DD');
+                list = list.filter(function (r) { return localDateOf(r.timestamp) === String(a.date); });
+              }
+              var limit = xlLimit(a.limit, 20, XL_QUERY_LIMIT);
+              var hit = list.slice(0, limit);
+              return { total: list.length, returned: hit.length, records: hit.map(xlBrief) };
+            }
+          },
+          get_stats: {
+            description: '返回流水统计（只读）：总条数、今日/近7天/近30天条数、六个分类各自数量与占比，不含记录内容',
+            params: {},
+            run: async function () {
+              var now = new Date();
+              var todayStr = getTodayStr();
+              var weekAgo = new Date(now);
+              weekAgo.setDate(weekAgo.getDate() - 7);
+              var monthAgo = new Date(now);
+              monthAgo.setMonth(monthAgo.getMonth() - 1);
+              var today = 0, week = 0, month = 0, catCount = {};
+              records.forEach(function (r) {
+                if (localDateOf(r.timestamp) === todayStr) today++;
+                var t = new Date(r.timestamp);
+                if (!isNaN(t.getTime())) {
+                  if (t >= weekAgo) week++;
+                  if (t >= monthAgo) month++;
+                }
+                catCount[r.category] = (catCount[r.category] || 0) + 1;
+              });
+              var total = records.length;
+              var categories = XL_CATS.map(function (c) {
+                var n = catCount[c] || 0;
+                return { category: c, count: n, pct: total > 0 ? Math.round((n / total) * 100) : 0 };
+              });
+              return { total: total, today: today, thisWeek: week, thisMonth: month, categories: categories };
+            }
+          },
+          export_all: {
+            description: '导出全部记录原文（只读，含 id/content/category/timestamp/timeFormatted/updated_at）。默认最多 200 条，超出会截断并在返回中注明总量',
+            params: {
+              limit: { type: 'number', description: '返回条数上限，默认 200，最大 500', required: false }
+            },
+            run: async function (args) {
+              var a = args || {};
+              var limit = xlLimit(a.limit, XL_EXPORT_LIMIT, XL_EXPORT_MAX);
+              var totalCount = records.length;
+              var out = records.slice(0, limit).map(function (r) {
+                return { id: r.id, content: r.content, category: r.category, timestamp: r.timestamp, timeFormatted: r.timeFormatted, updated_at: r.updated_at || '' };
+              });
+              var res = { totalCount: totalCount, returned: out.length, truncated: totalCount > out.length, records: out };
+              if (res.truncated) {
+                res.note = '已截断：共 ' + totalCount + ' 条记录，仅返回前 ' + out.length + ' 条；如需更多可传 limit';
+              }
+              return res;
+            }
+          },
+          get_chat_sessions: {
+            description: '列出与档案助理的历史对话（只读）。默认只返回会话标题/时间/消息数；显式传 withContent=true 才附带消息内容（每会话限量）',
+            params: {
+              withContent: { type: 'boolean', description: '是否附带消息内容，默认 false', required: false },
+              limit: { type: 'number', description: '返回会话数，默认 10，最大 50', required: false },
+              maxMessages: { type: 'number', description: 'withContent=true 时每会话最多返回消息条数，默认 30', required: false }
+            },
+            run: async function (args) {
+              var a = args || {};
+              var limit = xlLimit(a.limit, XL_CHAT_LIMIT, 50);
+              var maxMsgs = xlNum(a.maxMessages, XL_MSG_LIMIT);
+              var sessions = chatSessions.slice(0, limit).map(function (s) {
+                var msgs = s.messages || [];
+                var item = { id: s.id, title: s.title || '对话', time: s.createdAt || s.updatedAt || '', messageCount: msgs.length };
+                if (a.withContent === true) {
+                  item.messages = msgs.slice(0, maxMsgs).map(function (m) {
+                    return { role: m.role, content: m.content };
+                  });
+                }
+                return item;
+              });
+              return { returned: sessions.length, sessions: sessions };
+            }
+          },
+          add_record: {
+            description: '新增一条流水记录（写操作，可被用户在时间线手动删除）。时间戳由应用生成，不接受外部传入；分类六选一，不传时使用应用当前所选分类',
+            params: {
+              content: { type: 'string', description: '记录内容', required: true },
+          // ── 编辑记录 ──
+          edit_record: {
+            description: '编辑已有记录的内容和/或分类（写操作）。recordId 必填，来自 query_records。content 和 category 至少传一个；不传的字段不改。',
+            params: {
+              recordId: { type: 'string', description: '目标记录 id，必填，来自 query_records 返回', required: true },
+              content: { type: 'string', description: '新的记录内容，可选，上限 2000 字；不传则不改内容', required: false },
+              category: { type: 'string', description: '新的记录分类，可选，六选一：目之所见/耳之所闻/身之所感/心之所想/世间所遇/手中所藏', required: false }
+            },
+            run: async function (args) {
+              var a = args || {};
+              if (!a.recordId) throw new Error('edit_record 缺少必填参数 recordId');
+              if (a.content === undefined && a.category === undefined) 
+                throw new Error('edit_record 至少需要 content 或 category 之一');
+              
+              // 查找记录
+              var record = null;
+              for (var i = 0; i < records.length; i++) {
+                if (records[i].id === a.recordId && !records[i].deleted) {
+                  record = records[i];
+                  break;
+                }
+              }
+              
+              if (!record) throw new Error('未找到 id=' + a.recordId + ' 的记录');
+              
+              // 修改字段
+              if (a.content !== undefined && a.content !== null) {
+                var newContent = String(a.content).trim();
+                if (newContent.length > 2000) throw new Error('content 超长（' + newContent.length + ' 字，上限 2000）');
+                if (!newContent) throw new Error('content 不能为空');
+                record.content = newContent;
+              }
+              if (a.category !== undefined && a.category !== null) {
+                if (XL_CATS.indexOf(a.category) === -1) throw new Error(XL_CAT_MSG);
+                record.category = a.category;
+              }
+              
+              record.updated_at = new Date().toISOString();
+              persist(STORAGE_KEY, JSON.stringify(records));
+              renderRecords();
+              renderSummary();
+              
+              return {
+                id: record.id,
+                content: record.content,
+                category: record.category,
+                timestamp: record.timestamp,
+                timeFormatted: record.timeFormatted,
+                verified: true
+              };
+            }
+          },
+
+          // ── 删除记录 ──
+          delete_record: {
+            description: '删除一条记录（写操作）。recordId 必填，来自 query_records。默认软删除（标记 deleted）；传 permanent:true 则永久删除（不可恢复）。',
+            params: {
+              recordId: { type: 'string', description: '目标记录 id，必填，来自 query_records 返回', required: true },
+              permanent: { type: 'boolean', description: '是否永久删除，默认 false（软删除）；true=永久删除不可恢复，可选', required: false }
+            },
+            run: async function (args) {
+              var a = args || {};
+              if (!a.recordId) throw new Error('delete_record 缺少必填参数 recordId');
+              
+              // 查找记录
+              var recordIndex = -1;
+              for (var i = 0; i < records.length; i++) {
+                if (records[i].id === a.recordId && !records[i].deleted) {
+                  recordIndex = i;
+                  break;
+                }
+              }
+              
+              if (recordIndex === -1) throw new Error('未找到 id=' + a.recordId + ' 的记录');
+              
+              var record = records[recordIndex];
+              
+              if (a.permanent) {
+                // 永久删除：从数组中移除
+                records.splice(recordIndex, 1);
+                persist(STORAGE_KEY, JSON.stringify(records));
+                renderRecords();
+                renderSummary();
+                return {
+                  id: a.recordId,
+                  permanent: true,
+                  verified: true,
+                  note: '记录已永久删除，不可恢复'
+                };
+              } else {
+                // 软删除：标记 deleted
+                record.deleted = true;
+                record.deletedAt = new Date().toISOString();
+                persist(STORAGE_KEY, JSON.stringify(records));
+                renderRecords();
+                renderSummary();
+                return {
+                  id: a.recordId,
+                  permanent: false,
+                  verified: true,
+                  note: '记录已标记为删除（软删除）'
+                };
+              }
+            }
+          },
+
+          // ── 编辑分类 ──
+          edit_category: {
+            description: '编辑已有分类的名称（写操作）。categoryName 必填，是当前分类名称；newName 必填，是新的分类名称。',
+            params: {
+              categoryName: { type: 'string', description: '当前分类名称，必填', required: true },
+              newName: { type: 'string', description: '新的分类名称，必填，上限 10 字', required: true }
+            },
+            run: async function (args) {
+              var a = args || {};
+              if (!a.categoryName) throw new Error('edit_category 缺少必填参数 categoryName');
+              if (!a.newName) throw new Error('edit_category 缺少必填参数 newName');
+              
+              var newName = String(a.newName).trim();
+              if (newName.length > 10) throw new Error('newName 超长（' + newName.length + ' 字，上限 10）');
+              if (!newName) throw new Error('newName 不能为空');
+              
+              // 检查分类是否存在
+              if (XL_CATS.indexOf(a.categoryName) === -1) throw new Error('分类不存在：' + a.categoryName);
+              
+              // 更新所有记录的分类
+              var count = 0;
+              records.forEach(function(r) {
+                if (r.category === a.categoryName) {
+                  r.category = newName;
+                  count++;
+                }
+              });
+              
+              // 更新分类图标映射
+              if (CATEGORY_ICONS[a.categoryName]) {
+                CATEGORY_ICONS[newName] = CATEGORY_ICONS[a.categoryName];
+                delete CATEGORY_ICONS[a.categoryName];
+              }
+              
+              // 更新当前分类
+              if (currentCategory === a.categoryName) {
+                currentCategory = newName;
+              }
+              
+              persist(STORAGE_KEY, JSON.stringify(records));
+              renderRecords();
+              renderSummary();
+              
+              return {
+                oldName: a.categoryName,
+                newName: newName,
+                recordsUpdated: count,
+                verified: true
+              };
+            }
+          },
+
+          // ── 删除分类 ──
+          delete_category: {
+            description: '删除一个分类（写操作）。categoryName 必填，是当前分类名称。该分类下的记录会移动到默认分类（目之所见）。',
+            params: {
+              categoryName: { type: 'string', description: '当前分类名称，必填', required: true }
+            },
+            run: async function (args) {
+              var a = args || {};
+              if (!a.categoryName) throw new Error('delete_category 缺少必填参数 categoryName');
+              
+              // 检查分类是否存在
+              if (XL_CATS.indexOf(a.categoryName) === -1) throw new Error('分类不存在：' + a.categoryName);
+              
+              // 移动记录到默认分类
+              var count = 0;
+              records.forEach(function(r) {
+                if (r.category === a.categoryName) {
+                  r.category = '目之所见';
+                  count++;
+                }
+              });
+              
+              // 删除分类图标
+              delete CATEGORY_ICONS[a.categoryName];
+              
+              // 如果当前分类是被删除的分类，切换到默认分类
+              if (currentCategory === a.categoryName) {
+                currentCategory = '目之所见';
+              }
+              
+              persist(STORAGE_KEY, JSON.stringify(records));
+              renderRecords();
+              renderSummary();
+              
+              return {
+                categoryName: a.categoryName,
+                recordsMoved: count,
+                newCategory: '目之所见',
+                verified: true,
+                note: '分类已删除，记录已移动到「目之所见」'
+              };
+            }
+          }
+,
+              category: { type: 'string', description: '分类，六选一：目之所见/耳之所闻/身之所感/心之所想/世间所遇/手中所藏；不传则用应用当前所选分类', required: false },
+              clientId: { type: 'string', description: '可选幂等键：同一 clientId 重复调用不会重复新增，直接返回已存在记录', required: false }
+            },
+            run: async function (args) {
+              var a = args || {};
+              var content = String(a.content || '').trim();
+              if (!content) throw new Error('content 不能为空');
+              var cat = a.category ? String(a.category) : XL_DEFAULT_CAT;
+              if (XL_CATS.indexOf(cat) === -1) throw new Error(XL_CAT_MSG);
+              if (a.clientId) {
+                var map = xlGetClientMap();
+                var existId = map[String(a.clientId)];
+                if (existId) {
+                  for (var i = 0; i < records.length; i++) {
+                    if (records[i].id === existId) {
+                      return { duplicated: true, record: xlBrief(records[i]) };
+                    }
+                  }
+                }
+              }
+              if (!recordInput) throw new Error('页面输入框不可用，请确认应用已正常打开');
+              var beforeLen = records.length;
+              var origCat = currentCategory;
+              var draft = recordInput.value; // 用户未存档草稿，代记后原样还原，避免被静默清空
+              currentCategory = cat; // saveRecord() 按当前分类归档
+              try {
+                recordInput.value = content;
+                saveRecord();
+              } finally {
+                currentCategory = origCat;
+                recordInput.value = draft;
+                charCount.textContent = String(draft.length);
+                autoGrow(recordInput);
+              }
+              if (records.length !== beforeLen + 1) throw new Error('保存失败，请稍后重试');
+              var entry = records[0];
+              if (entry.content !== content) throw new Error('保存结果未能通过校验');
+              if (a.clientId) {
+                var m2 = xlGetClientMap();
+                m2[String(a.clientId)] = entry.id;
+                persist(XL_CLIENT_KEY, JSON.stringify(m2));
+              }
+              return { record: xlBrief(entry) };
+            }
+          }
+        }
+      });
+    }
+
+  })();
+  </script>
+</body>
+</html>
