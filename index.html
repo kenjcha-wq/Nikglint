@@ -1547,6 +1547,86 @@
     }
     .summary-box .summary-category-list .cat-tag .count { color: var(--accent); font-weight: 700; }
 
+    /* ── 心理 / 哲思 分析分区 ── */
+    .summary-box .cat-tag {
+      font-size: 11px;
+      font-family: var(--sans);
+      padding: 4px 12px;
+      background: var(--surface);
+      border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .summary-box .cat-tag .count { color: var(--accent); font-weight: 700; }
+    .summary-box .sum-head {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--text);
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .summary-box .sum-block { margin-bottom: 14px; }
+    .summary-box .sum-block:last-of-type { margin-bottom: 0; }
+    .summary-box .sum-title {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 6px;
+      border-left: 2px solid var(--accent);
+      padding-left: 8px;
+    }
+    .summary-box .sum-psych-head {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .summary-box .sum-text {
+      font-size: 12px;
+      line-height: 1.8;
+      color: var(--text);
+    }
+    .summary-box .sum-thought {
+      font-size: 13px;
+      line-height: 1.9;
+      color: var(--text);
+      font-style: italic;
+      padding: 4px 0;
+    }
+    .summary-box .sum-source {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-top: 2px;
+    }
+    .summary-box .sum-suggest { margin-top: 6px; display: flex; flex-direction: column; gap: 6px; }
+    .summary-box .sum-suggest-item {
+      display: flex; flex-direction: column; gap: 1px;
+      padding: 6px 10px; background: var(--surface);
+      border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+      border-radius: 8px;
+    }
+    .summary-box .sum-cat { font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+    .summary-box .sum-cat .ico { width: 14px; height: 14px; stroke-width: 1.6; color: var(--accent); }
+    .summary-box .sum-q { font-size: 11px; color: var(--muted); }
+    .summary-box .sum-todo { margin-top: 6px; display: flex; flex-direction: column; gap: 5px; }
+    .summary-box .sum-todo-item { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; line-height: 1.6; }
+    .summary-box .sum-todo-mark { flex-shrink: 0; font-family: var(--mono); font-size: 10px; padding-top: 1px; }
+    .summary-box .sum-todo-item.done .sum-todo-mark { color: #3a9d6b; }
+    .summary-box .sum-todo-item.pending .sum-todo-mark { color: #c08a2e; }
+    .summary-box .sum-todo-text { color: var(--text); }
+    .summary-box .sum-foot {
+      margin-top: 12px; padding-top: 10px;
+      border-top: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+      font-size: 11px; color: var(--muted);
+      display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center;
+    }
+    .summary-box .sum-empty { color: var(--muted); font-size: 12px; line-height: 1.9; }
+
     .summary-actions { display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
     .summary-actions .btn-row { display: flex; gap: 10px; }
     .summary-actions .btn-row .btn-action { flex: 1; }
@@ -1973,7 +2053,7 @@
             <div style="color:var(--muted);font-size:11px;">选择时段，查看结构映射</div>
           </div>
           <div class="summary-actions">
-            <button class="btn-action" id="genSummaryBtn">生成摘要</button>
+            <button class="btn-action" id="genSummaryBtn">生成分析</button>
             <div class="btn-row">
               <button class="btn-action" id="quickDayBtn">今日</button>
               <button class="btn-action" id="quickWeekBtn">本周</button>
@@ -2877,121 +2957,266 @@
       }
     });
 
+    // ── 心理 / 哲思 分析引擎（本地启发式，离线可用）──
+    var EMOTION_LEX = [
+      { key: '烦躁', words: ['烦躁','焦虑','急躁','火大','崩溃','抓狂','憋','压抑','憋屈','郁闷','恼'] },
+      { key: '疲惫', words: ['累','疲惫','疲乏','困','倦','透支','没劲','撑不住','乏力','乏'] },
+      { key: '后怕', words: ['后怕','担心','不安','悬着','紧张','揪心','害怕','怕','悬心','发毛','慌'] },
+      { key: '松弛', words: ['松了','轻松','松口气','舒坦','愉快','开心','高兴','雀跃','满足','惬意','舒展','舒心','乐'] },
+      { key: '平静', words: ['平静','安宁','踏实','淡','安静','安然','稳','定','平和'] },
+      { key: '期待', words: ['期待','盼','憧憬','希望','念想','盼头','向往','指望'] },
+      { key: '游离', words: ['茫然','失神','走神','恍惚','发呆','出神','放空','空落落','飘'] },
+      { key: '柔软', words: ['感动','暖','温柔','心疼','珍贵','不舍','温热','软'] }
+    ];
+    var REFLECT_CUES = ['忽然','想到','原来','其实','也许','或许','觉得','明白','发现','如果','终究','不过','反而','总是','慢慢','终于','为什么','好像','不知','未必','说到底','倒是','竟','算是','只不过','仔细','回头','说不好','说不清','怕是','大约是','隐隐','倒也','才懂','才知'];
+    var TODO_CUES = ['待办','记得','明天','后天','下周','周末','计划','需要','务必','提醒','该','准备','约','改天','到时候','答应','还差','欠','抽空','别忘了','记一下','留个','等'];
+    var DONE_CUES = ['已','完成','搞定','好了','办了','去了','做完','结束','成了','落定','收尾','妥了','弄好','落实','交了','寄了','发走','已做','已回','已买','已定'];
+
+    function getPeriodRecords(period) {
+      var now = new Date();
+      if (period === 'week') {
+        var w = new Date(now); w.setDate(w.getDate() - 7);
+        return records.filter(function(r){ return new Date(r.timestamp) >= w; });
+      }
+      if (period === 'month') {
+        var m = new Date(now); m.setMonth(m.getMonth() - 1);
+        return records.filter(function(r){ return new Date(r.timestamp) >= m; });
+      }
+      return records.filter(function(r){ return isToday(r.timestamp); });
+    }
+
+    function getLastNDaysRecords(n) {
+      var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - (n - 1));
+      cutoff.setHours(0, 0, 0, 0);
+      return records.filter(function(r){ return new Date(r.timestamp) >= cutoff; });
+    }
+
+    function firstSentence(s) {
+      s = (s || '').trim();
+      if (!s) return '';
+      var m = s.match(/^[\s\S]{1,60}?[。！？\n]/);
+      var seg = m ? m[0] : s.slice(0, 60);
+      return seg.replace(/\n/g, ' ').trim();
+    }
+
+    function topKey(obj) {
+      var best = null, bn = 0;
+      for (var k in obj) { if (obj[k] > bn) { bn = obj[k]; best = k; } }
+      return best;
+    }
+    function dominantCategory(list) {
+      var c = {};
+      list.forEach(function(r){ c[r.category] = (c[r.category] || 0) + 1; });
+      return topKey(c) || '未分类';
+    }
+
+    function analyzePsychology(list) {
+      var sorted = list.slice().sort(function(a,b){ return new Date(a.timestamp) - new Date(b.timestamp); });
+      var tally = {}, found = [];
+      sorted.forEach(function(r){
+        var c = r.content || '';
+        EMOTION_LEX.forEach(function(g){
+          g.words.forEach(function(w){
+            if (c.indexOf(w) !== -1) {
+              tally[g.key] = (tally[g.key] || 0) + 1;
+              if (found.indexOf(g.key) === -1) found.push(g.key);
+            }
+          });
+        });
+      });
+      var firstCat = sorted.length ? (sorted[0].category || '') : '';
+      var lastCat = sorted.length ? (sorted[sorted.length - 1].category || '') : '';
+      var migration = (firstCat && lastCat && firstCat !== lastCat)
+        ? '关注重心从「' + firstCat + '」移向「' + lastCat + '」。' : '';
+
+      var half = Math.floor(sorted.length / 2);
+      var early = {}, late = {};
+      sorted.forEach(function(r, i){
+        var bag = i < half ? early : late;
+        var c = r.content || '';
+        EMOTION_LEX.forEach(function(g){
+          g.words.forEach(function(w){ if (c.indexOf(w) !== -1) bag[g.key] = (bag[g.key] || 0) + 1; });
+        });
+      });
+      var earlyTop = topKey(early), lateTop = topKey(late);
+      var shift = (earlyTop && lateTop && earlyTop !== lateTop)
+        ? '情绪由' + earlyTop + '转向' + lateTop + '。' : '';
+
+      var dominant = topKey(tally);
+      var headline, detail;
+      var parts = [];
+      if (found.length > 0) parts.push('读到这些信号：' + found.join('、') + '。');
+      if (shift) parts.push(shift);
+      if (migration) parts.push(migration);
+      if (found.length === 0) {
+        var dom = dominantCategory(sorted);
+        headline = '事实记录';
+        detail = '这段记录偏事实陈述，未读到明显情绪波动；注意力集中在「' + dom + '」。';
+      } else if (earlyTop && lateTop && earlyTop !== lateTop) {
+        headline = earlyTop + ' → ' + lateTop;
+        detail = parts.join('');
+      } else {
+        headline = dominant || found[0];
+        detail = parts.join('');
+      }
+      return { headline: headline, detail: detail, found: found };
+    }
+
+    function extractThought(list) {
+      var best = null, bestScore = -1;
+      list.forEach(function(r){
+        var c = r.content || '';
+        var score = 0;
+        REFLECT_CUES.forEach(function(w){ if (c.indexOf(w) !== -1) score += 1; });
+        score += Math.min(c.length / 50, 3);
+        if (score > bestScore) { bestScore = score; best = r; }
+      });
+      if (best && bestScore >= 1) {
+        return { line: firstSentence(best.content), source: best.content.slice(0, 80), has: true };
+      }
+      var dom = dominantCategory(list);
+      return { line: '今日围绕「' + dom + '」的记录，多停在观察层面；若愿多落一句当时的念头，哲思会更厚。', source: '', has: false };
+    }
+
+    function buildStructLine(list) {
+      var c = {};
+      list.forEach(function(r){ c[r.category] = (c[r.category] || 0) + 1; });
+      var arr = [];
+      for (var k in c) arr.push([k, c[k]]);
+      arr.sort(function(a, b){ return b[1] - a[1]; });
+      return arr.map(function(it){
+        var icon = CATEGORY_ICONS[it[0]] || '';
+        return '<span class="cat-tag">' + icon + ' ' + escapeHTML(it[0]) + ' <span class="count">' + it[1] + '</span></span>';
+      }).join('');
+    }
+
+    function buildAnalysisHTML(list, period) {
+      var psych = analyzePsychology(list);
+      var thought = extractThought(list);
+      var labels = { day: '今日', week: '本周', month: '本月' };
+      var label = labels[period] || '';
+      var html = '';
+      html += '<div class="sum-head">' + label + ' · 心理与哲思</div>';
+      html += '<div class="sum-block">';
+      html += '<div class="sum-title">心理分析</div>';
+      html += '<div class="sum-psych-head">' + escapeHTML(psych.headline) + '</div>';
+      html += '<div class="sum-text">' + escapeHTML(psych.detail) + '</div>';
+      html += '</div>';
+      html += '<div class="sum-block">';
+      html += '<div class="sum-title">哲思</div>';
+      html += '<div class="sum-thought">' + escapeHTML(thought.line) + '</div>';
+      if (thought.has && thought.source) {
+        html += '<div class="sum-source">— ' + escapeHTML(thought.source) + (thought.source.length >= 80 ? '…' : '') + '</div>';
+      }
+      html += '</div>';
+      html += '<div class="sum-foot">结构：' + buildStructLine(list) + '</div>';
+      return html;
+    }
+
+    function cjkBigrams(s) {
+      var chars = (s || '').match(/[一-龥]/g) || [];
+      var out = [];
+      for (var i = 0; i < chars.length - 1; i++) out.push(chars[i] + chars[i + 1]);
+      return out;
+    }
+    var FUNC_CHARS = '的了着过在是我你他她它们这那什么怎可可以个们得地很都也又还就才把被与及和或因为所以但但是如如果当现时在知道觉得有点今昨明后周上下去来'.split('');
+    function isFuncChar(ch) { return FUNC_CHARS.indexOf(ch) !== -1; }
+    function shareBigram(a, b) {
+      var ba = cjkBigrams(a), bb = cjkBigrams(b);
+      for (var i = 0; i < ba.length; i++) {
+        var g = ba[i];
+        if (isFuncChar(g.charAt(0)) && isFuncChar(g.charAt(1))) continue;
+        if (bb.indexOf(g) !== -1) return true;
+      }
+      return false;
+    }
+
+    function buildReviewHTML(last3) {
+      var html = '';
+      html += '<div class="sum-head">今日暂无落笔 · 回看近三天</div>';
+
+      var cats = Object.keys(CATEGORY_PLACEHOLDERS);
+      var present = {};
+      last3.forEach(function(r){ present[r.category] = true; });
+      var missing = cats.filter(function(c){ return !present[c]; });
+
+      html += '<div class="sum-block">';
+      html += '<div class="sum-title">记录建议</div>';
+      if (missing.length === 0) {
+        html += '<div class="sum-text">近三天六向都有痕迹，不必补齐；可挑一个方向往深里写一句。</div>';
+      } else {
+        html += '<div class="sum-text">这几个方向已经断档，今天可以补一笔：</div>';
+        html += '<div class="sum-suggest">';
+        missing.forEach(function(c){
+          html += '<div class="sum-suggest-item">' +
+                  '<span class="sum-cat">' + (CATEGORY_ICONS[c] || '') + ' ' + escapeHTML(c) + '</span>' +
+                  '<span class="sum-q">' + escapeHTML(CATEGORY_PLACEHOLDERS[c]) + '</span></div>';
+        });
+        html += '</div>';
+      }
+      html += '</div>';
+
+      html += '<div class="sum-block">';
+      html += '<div class="sum-title">事项追踪（近三天）</div>';
+      var doneTopics = [];
+      last3.forEach(function(r){
+        var c = r.content || '';
+        if (DONE_CUES.some(function(w){ return c.indexOf(w) !== -1; })) doneTopics.push(c);
+      });
+      var todos = [];
+      last3.forEach(function(r){
+        var c = r.content || '';
+        var hit = TODO_CUES.some(function(w){ return c.indexOf(w) !== -1; });
+        if (hit) {
+          var done = DONE_CUES.some(function(w){ return c.indexOf(w) !== -1; });
+          if (!done) {
+            done = doneTopics.some(function(dt){ return dt !== c && shareBigram(c, dt); });
+          }
+          todos.push({ text: firstSentence(c), done: done });
+        }
+      });
+      if (todos.length === 0) {
+        html += '<div class="sum-text">近三天没读到明确的待办或事项，可留意「要 / 记得 / 明天」这类信号。</div>';
+      } else {
+        html += '<div class="sum-todo">';
+        todos.slice(0, 8).forEach(function(t){
+          html += '<div class="sum-todo-item ' + (t.done ? 'done' : 'pending') + '">' +
+                  '<span class="sum-todo-mark">' + (t.done ? '✓ 已了' : '○ 待核') + '</span>' +
+                  '<span class="sum-todo-text">' + escapeHTML(t.text) + '</span></div>';
+        });
+        html += '</div>';
+      }
+      html += '</div>';
+
+      html += '<div class="sum-foot">近三天共 ' + last3.length + ' 条 · ' + buildStructLine(last3) + '</div>';
+      return html;
+    }
+
+    function renderSummaryBody() {
+      if (records.length === 0) {
+        summaryOutput.innerHTML = '<div class="sum-empty">还没有任何记录。<br>今天想留下点什么？回到首页，写下一笔。</div>';
+        return;
+      }
+      var todayRecords = records.filter(function(r) { return isToday(r.timestamp); });
+      if (todayRecords.length > 0) {
+        var list = getPeriodRecords(currentPeriod);
+        if (list.length === 0) list = todayRecords;
+        summaryOutput.innerHTML = buildAnalysisHTML(list, currentPeriod);
+      } else {
+        var last3 = getLastNDaysRecords(3);
+        summaryOutput.innerHTML = buildReviewHTML(last3);
+      }
+    }
+
     function renderSummary() {
       statTotal.textContent = records.length;
       var todayRecords = records.filter(function(r) { return isToday(r.timestamp); });
       statToday.textContent = todayRecords.length;
-
-      var catCount = {};
-      records.forEach(function(r) {
-        catCount[r.category] = (catCount[r.category] || 0) + 1;
-      });
-      var total = records.length;
-
-      var catHtml = '';
-      var sortedCats = [];
-      for (var cat in catCount) {
-        if (catCount.hasOwnProperty(cat)) {
-          sortedCats.push([cat, catCount[cat]]);
-        }
-      }
-      sortedCats.sort(function(a, b) { return b[1] - a[1]; });
-      
-      sortedCats.forEach(function(item) {
-        var cat = item[0];
-        var count = item[1];
-        var pct = total > 0 ? Math.round((count / total) * 100) : 0;
-        var icon = CATEGORY_ICONS[cat] || '';
-        catHtml += '<span class="cat-tag">' + icon + ' ' + escapeHTML(cat) + ' <span class="count">' + count + '</span> (' + pct + '%)</span>';
-      });
-
-      var periodLabels = { day: '今日', week: '本周', month: '本月' };
-      var label = periodLabels[currentPeriod] || '';
-
-      summaryOutput.innerHTML = 
-        '<div style="font-weight:600;font-family:var(--mono);font-size:11px;letter-spacing:0.04em;margin-bottom:8px;">' +
-          label + ' · ' + total + ' 条流水' +
-        '</div>' +
-        '<div class="summary-category-list">' + (catHtml || '<span style="color:var(--muted);font-size:11px;">暂无数据</span>') + '</div>' +
-        '<div style="margin-top:10px;font-size:11px;color:var(--muted);">' +
-          (total > 0 ? '主要流向：' + (sortedCats[0] ? sortedCats[0][0] : '无') : '尚未建立人生轨迹') +
-        '</div>';
+      renderSummaryBody();
     }
 
     function generateSummary() {
-      if (records.length === 0) {
-        summaryOutput.innerHTML = '<div style="color:var(--muted);font-size:11px;">暂无记录，无法建立映射</div>';
-        return;
-      }
-
-      var now = new Date();
-      var periodRecords = records;
-
-      if (currentPeriod === 'day') {
-        var todayStr = getTodayStr();
-        periodRecords = records.filter(function(r) { return r.timestamp.indexOf(todayStr) === 0; });
-      } else if (currentPeriod === 'week') {
-        var weekAgo = new Date(now);
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        periodRecords = records.filter(function(r) { return new Date(r.timestamp) >= weekAgo; });
-      } else if (currentPeriod === 'month') {
-        var monthAgo = new Date(now);
-        monthAgo.setMonth(monthAgo.getMonth() - 1);
-        periodRecords = records.filter(function(r) { return new Date(r.timestamp) >= monthAgo; });
-      }
-
-      if (periodRecords.length === 0) {
-        summaryOutput.innerHTML = '<div style="color:var(--muted);font-size:11px;">该时段内无记录</div>';
-        return;
-      }
-
-      var catCount = {};
-      periodRecords.forEach(function(r) {
-        catCount[r.category] = (catCount[r.category] || 0) + 1;
-      });
-      var sortedCats = [];
-      for (var cat in catCount) {
-        if (catCount.hasOwnProperty(cat)) {
-          sortedCats.push([cat, catCount[cat]]);
-        }
-      }
-      sortedCats.sort(function(a, b) { return b[1] - a[1]; });
-      
-      var dominant = sortedCats[0] ? sortedCats[0][0] : '无';
-      var dominantPct = sortedCats[0] ? Math.round((sortedCats[0][1] / periodRecords.length) * 100) : 0;
-
-      var insights = [];
-      if (periodRecords.length > 8) insights.push('记录密度较高');
-      if (dominant === '目之所见' || dominant === '世间所遇') insights.push('外部感知活跃');
-      if (dominant === '心之所想' || dominant === '身之所感') insights.push('内在觉察明显');
-      if (periodRecords.length <= 3) insights.push('记录偏少，节奏平缓');
-
-      var periodLabels = { day: '今日', week: '本周', month: '本月' };
-      var label = periodLabels[currentPeriod] || '';
-
-      var recordPreview = '';
-      var previewItems = periodRecords.slice(0, 3);
-      previewItems.forEach(function(r) {
-        var content = escapeHTML((r.content || '').slice(0, 36)) + ((r.content || '').length > 36 ? '…' : '');
-        recordPreview += '· ' + content + '<br>';
-      });
-      if (periodRecords.length > 3) {
-        recordPreview += '<br><span style="color:var(--muted);">… 还有 ' + (periodRecords.length - 3) + ' 条</span>';
-      }
-
-      summaryOutput.innerHTML = 
-        '<div style="font-weight:600;font-family:var(--mono);font-size:11px;letter-spacing:0.04em;margin-bottom:8px;">' +
-          label + ' · ' + periodRecords.length + ' 条' +
-        '</div>' +
-        '<div style="font-size:12px;line-height:1.9;">' +
-          '<div>主要流向：<strong>' + dominant + '</strong> (' + dominantPct + '%)</div>' +
-          '<div style="font-size:11px;color:var(--muted);margin-top:6px;">' +
-            insights.join(' · ') +
-          '</div>' +
-          '<div style="margin-top:10px;font-size:11px;color:var(--muted);border-top:1px solid color-mix(in srgb, var(--border) 40%, transparent);padding-top:10px;">' +
-            recordPreview +
-          '</div>' +
-        '</div>';
+      renderSummary();
     }
 
     function exportData() {
