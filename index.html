@@ -2660,15 +2660,20 @@
         (remoteRes.data || []).forEach(function (r) { remoteById[r.id] = r.updated_at; });
 
         var dirty = records.filter(function (r) {
-          if (r.user_id && r.user_id !== currentUser.id) return false;
+          if (r.user_id && r.user_id !== 'local' && r.user_id !== currentUser.id) return false;
           var ts = r.updated_at || r.timestamp;
           return !remoteById[r.id] || new Date(ts) > new Date(remoteById[r.id]);
         });
 
         if (dirty.length > 0) {
+          // 只推送云端表真实存在的列。多送任何未知列（例如本地的 cloudSynced）
+          // 会让 PostgREST 返回 PGRST204 并【整批拒收】，同步会静默停摆。
+          var SYNC_COLS = ['id', 'content', 'category', 'timestamp', 'timeFormatted'];
           var rows = dirty.map(function (r) {
             var row = {};
-            for (var k in r) { if (r.hasOwnProperty(k)) row[k] = r[k]; }
+            SYNC_COLS.forEach(function (k) {
+              if (r[k] !== undefined && r[k] !== null) row[k] = r[k];
+            });
             row.user_id = currentUser.id;
             row.updated_at = r.updated_at || r.timestamp;
             return row;
