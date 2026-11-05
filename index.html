@@ -2607,8 +2607,13 @@
       showFeedback('仅本地使用，不会同步');
     });
 
-    async function checkAuthSession() {
+    // 同一次启动里 applyConfig 和 initSupabase 都会调到这里，会重复拉一遍云端。
+    // 3 秒内只认第一次（旧版每次开页都白拉两遍）。
+    var lastAuthCheckAt = 0;
+    async function checkAuthSession(force) {
       if (!supabase) return;
+      if (!force && Date.now() - lastAuthCheckAt < 3000) return;
+      lastAuthCheckAt = Date.now();
       try {
         var sessionData = await supabase.auth.getSession();
         if (sessionData.data && sessionData.data.session && sessionData.data.session.user) {
@@ -2640,99 +2645,276 @@
       }
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    //  增量同步 v7（2026-11-02）
+    //  旧版：每次同步 select('id, updated_at') 把整表拿一遍，每次登录
+    //        再 select('*') 全量拉一遍。记录一多，egress = 条数 × 设备数 × 频率。
+    //  新版：本地保存一份「云端影子」(id → updated_at)。
+    //        没改动 → 一个请求都不发；有改动 → 只推这几条；
+    //        有变化 → 只拉 cursor 之后的行；删除靠 10 分钟一次 id 核对兜底。
+    // ═══════════════════════════════════════════════════════════════════
+    var SYNC_STATE_KEY = 'glint_sync_state_v1';
+    var SYNC_COLS = ['id', 'content', 'category', 'timestamp', 'timeFormatted'];
+    var SYNC_PULL_COLS = SYNC_COLS.concat(['user_id', 'updated_at']).join(',');
+    var SWEEP_MS = 10 * 60 * 1000;     // 多久核对一次「有没有被别的设备删掉」
+    var TICK_IDLE_MS = 5 * 60 * 1000;  // 没有改动：隔 5 分钟看一眼
+    var TICK_DIRTY_MS = 30 * 1000;     // 有改动待推：30 秒
+    var TICK_MAX_MS = 10 * 60 * 1000;  // 失败退避上限
+
+    var syncTimer = null;
+    var syncFails = 0;
+    var lastSyncAt = 0;
+    var lastPullAt = 0;   // 15 秒内刚拉过就不再拉（登录后立刻推一次时常见）
+
+    function tsOf(s) {
+      if (!s) return 0;
+      var t = (typeof s === 'number') ? s : Date.parse(s);
+      return isNaN(t) ? 0 : t;
+    }
+    function localUpdatedAt(r) { return r.updated_at || r.timestamp || ''; }
+
+    function syncStateAll() {
+      try { return JSON.parse(load(SYNC_STATE_KEY) || '{}') || {}; } catch (e) { return {}; }
+    }
+    function getSyncState(uid) {
+      var all = syncStateAll();
+      var s = all[uid];
+      if (!s || typeof s !== 'object') s = {};
+      if (!s.ids || typeof s.ids !== 'object') s.ids = {};
+      if (!s.cursor) s.cursor = '';
+      if (!s.sweptAt) s.sweptAt = 0;
+      return s;
+    }
+    function putSyncState(uid, s) {
+      var all = syncStateAll();
+      all[uid] = s;
+      try { persist(SYNC_STATE_KEY, JSON.stringify(all)); } catch (e) {}
+    }
+    function getPendingDeletes() {
+      try {
+        var a = JSON.parse(load('glint_pending_deletes') || '[]');
+        return Array.isArray(a) ? a : [];
+      } catch (e) { return []; }
+    }
+    // 本地有、影子里没有（新建）或比影子新（改过）的，才算待推
+    function collectDirty(state) {
+      if (!currentUser) return [];
+      return records.filter(function (r) {
+        // ⚠️ 2026-11-02：以前这里把「user_id 不是当前账号」的记录**直接跳过**，
+        //    结果换过账号的人，手机上的老记录永远推不上去，界面上看着像"同步坏了"。
+        //    改成**认领**：这些是这台设备上的老记录，归当前账号所有，一起推上去。
+        //    （个人系统，不做多账号隔离；如果哪天要共享设备给两个人用，这里要改回去。）
+        if (r.user_id && r.user_id !== 'local' && r.user_id !== currentUser.id) {
+          r.user_id = currentUser.id;
+          r.adopted = true;
+        }
+        var known = state.ids[r.id];
+        if (!known) return true;
+        return tsOf(localUpdatedAt(r)) > tsOf(known);
+      });
+    }
+    function hasPendingWork(state) {
+      return getPendingDeletes().length > 0 || collectDirty(state).length > 0;
+    }
+
     async function syncToCloud() {
       if (!syncEnabled || !supabase || !currentUser) return;
+      if (syncTimer) { clearTimeout(syncTimer); syncTimer = null; }
+      var uid = currentUser.id;
+      var state = getSyncState(uid);
+      var table = config.sbTable || 'glint_records';
       try {
         updateSyncStatusUI('syncing', '同步中');
-        var table = config.sbTable || 'glint_records';
 
-        var pendingDeletes = JSON.parse(load('glint_pending_deletes') || '[]');
-        if (pendingDeletes.length > 0) {
-          var delRes = await supabase.from(table).delete().in('id', pendingDeletes);
+        // ① 先把待删的删掉 —— 但有条护栏：一次删太多就拒绝对云端动手
+        var dels = getPendingDeletes();
+        if (dels.length > 0 && dels.length > Math.max(3, records.length * 0.3)) {
+          throw new Error('这次要删 ' + dels.length + ' 条，超过本机总量（' + records.length +
+            ' 条）的 30%，已拦下没有执行。确认要删这么多，就先把本地记录数补回来或手动分批。');
+        }
+        if (dels.length > 0) {
+          var delRes = await supabase.from(table).delete().in('id', dels);
           if (delRes.error) throw delRes.error;
+          dels.forEach(function (id) { delete state.ids[id]; });
           persist('glint_pending_deletes', '[]');
-          pendingDeletes = [];
+          putSyncState(uid, state);
         }
 
-        var remoteRes = await supabase.from(table).select('id, updated_at').eq('user_id', currentUser.id);
-        if (remoteRes.error) throw remoteRes.error;
-        var remoteById = {};
-        (remoteRes.data || []).forEach(function (r) { remoteById[r.id] = r.updated_at; });
+        // ② 增量拉（首次没有影子时才全量）；刚拉过就跳过，省一次往返
+        var firstRun = !state.cursor && Object.keys(state.ids).length === 0;
+        if (firstRun || Date.now() - lastPullAt > 15000) {
+          await pullIncremental(state, firstRun);
+        }
 
-        var dirty = records.filter(function (r) {
-          if (r.user_id && r.user_id !== 'local' && r.user_id !== currentUser.id) return false;
-          var ts = r.updated_at || r.timestamp;
-          return !remoteById[r.id] || new Date(ts) > new Date(remoteById[r.id]);
-        });
-
+        // ③ 只推真正的改动
+        var dirty = collectDirty(state);
         if (dirty.length > 0) {
-          // 只推送云端表真实存在的列。多送任何未知列（例如本地的 cloudSynced）
-          // 会让 PostgREST 返回 PGRST204 并【整批拒收】，同步会静默停摆。
-          var SYNC_COLS = ['id', 'content', 'category', 'timestamp', 'timeFormatted'];
+          // 只送云端表真实存在的列，多送未知列会让 PostgREST 整批拒收（PGRST204）
           var rows = dirty.map(function (r) {
             var row = {};
             SYNC_COLS.forEach(function (k) {
               if (r[k] !== undefined && r[k] !== null) row[k] = r[k];
             });
-            row.user_id = currentUser.id;
-            row.updated_at = r.updated_at || r.timestamp;
+            row.user_id = uid;
+            row.updated_at = localUpdatedAt(r);
             return row;
           });
           var upRes = await supabase.from(table).upsert(rows, { onConflict: 'id' });
           if (upRes.error) throw upRes.error;
+          rows.forEach(function (row) { state.ids[row.id] = row.updated_at; });
           dirty.forEach(function (r) { r.cloudSynced = true; });
           persist(STORAGE_KEY, JSON.stringify(records));
+          putSyncState(uid, state);
         }
+
+        // ④ 定期核对「被别的设备删掉的」
+        if (Date.now() - state.sweptAt > SWEEP_MS) {
+          await sweepRemoteDeletes(state);
+        }
+
+        syncFails = 0;
+        lastSyncAt = Date.now();
         updateSyncStatusUI('online', '已同步');
       } catch (e) {
+        syncFails++;
         updateSyncStatusUI('offline', '离线');
         showSyncError('同步失败：' + (e.message || e));
+      } finally {
+        putSyncState(uid, state);
+        scheduleSync();
       }
     }
 
-    async function loadFromCloud() {
-      if (!syncEnabled || !supabase || !currentUser) return;
-      try {
-        updateSyncStatusUI('syncing', '同步中');
-        var table = config.sbTable || 'glint_records';
-        var result = await supabase.from(table).select('*').eq('user_id', currentUser.id);
-        if (result.error) throw result.error;
+    // 只拉 cursor 之后的行；forceFull 时拉全量（仅首次/影子丢失时）
+    async function pullIncremental(state, forceFull) {
+      var table = config.sbTable || 'glint_records';
+      var q = supabase.from(table).select(SYNC_PULL_COLS).eq('user_id', currentUser.id);
+      if (!forceFull && state.cursor) q = q.gt('updated_at', state.cursor);
+      var res = await q;
+      if (res.error) throw res.error;
+      var cloud = res.data || [];
+      lastPullAt = Date.now();
+      if (cloud.length > 0) mergeCloudRecords(state, cloud);
+      return cloud.length;
+    }
 
-        var cloud = result.data || [];
-        var cloudById = {};
-        cloud.forEach(function (r) { cloudById[r.id] = r; });
-
-        var merged = [];
-        var seen = {};
-        cloud.forEach(function (r) {
-          var c = {};
-          for (var k in r) { if (r.hasOwnProperty(k)) c[k] = r[k]; }
-          c.updated_at = c.updated_at || c.timestamp;
-          c.cloudSynced = true;
-          merged.push(c);
-          seen[c.id] = true;
-        });
-
-        records.forEach(function (l) {
-          if (seen[l.id]) return;
-          var keep = {};
-          for (var k in l) { if (l.hasOwnProperty(k)) keep[k] = l[k]; }
-          keep.updated_at = keep.updated_at || keep.timestamp;
-          merged.push(keep);
-          seen[keep.id] = true;
-        });
-
-        merged.sort(function (a, b) { return new Date(b.timestamp) - new Date(a.timestamp); });
-        records = merged;
+    function mergeCloudRecords(state, cloud) {
+      var idx = {};
+      records.forEach(function (r, i) { idx[r.id] = i; });
+      var changed = false;
+      cloud.forEach(function (row) {
+        var c = {};
+        for (var k in row) { if (row.hasOwnProperty(k)) c[k] = row[k]; }
+        c.updated_at = c.updated_at || c.timestamp;
+        c.cloudSynced = true;
+        var at = idx[c.id];
+        if (at === undefined) {
+          records.push(c);
+          idx[c.id] = records.length - 1;
+          changed = true;
+        } else if (tsOf(localUpdatedAt(records[at])) <= tsOf(localUpdatedAt(c))) {
+          // 云端一样新或更新：以云端为准（本地更新的会留在下一步被推上去）
+          records[at] = c;
+          changed = true;
+        }
+        state.ids[c.id] = localUpdatedAt(c);
+        if (tsOf(localUpdatedAt(c)) > tsOf(state.cursor)) state.cursor = localUpdatedAt(c);
+      });
+      if (changed) {
+        records.sort(function (a, b) { return tsOf(b.timestamp) - tsOf(a.timestamp); });
         persist(STORAGE_KEY, JSON.stringify(records));
         renderRecords();
         renderSummary();
         updateMobileBadge();
+      }
+    }
+
+    // 兜底：别的设备删掉的行，增量拉是看不见的，靠这条 id 核对发现
+    async function sweepRemoteDeletes(state) {
+      var table = config.sbTable || 'glint_records';
+      var res = await supabase.from(table).select('id, updated_at').eq('user_id', currentUser.id);
+      if (res.error) throw res.error;
+      var remote = {};
+      (res.data || []).forEach(function (r) { remote[r.id] = r.updated_at; });
+      var pending = getPendingDeletes();
+      var marked = 0, unflagged = 0;
+      // ⚠️ 2026-11-02：**这里只标记，绝不删除本地记录。**
+      //    原来的实现会把「云端没有」的本地行直接删掉 —— 一旦云端因为某种原因
+      //    只剩几条，就等于用少的那份把多的那份挤走。用户明确要求不允许。
+      //    现在改成：给这些行打上 cloudMissing 标记，界面上提示「云端缺 N 条」，
+      //    要不要删由人决定。删除只认一条路：本地点删除 → glint_pending_deletes。
+      records.forEach(function (r) {
+        if (r.user_id && r.user_id !== 'local' && r.user_id !== currentUser.id) {
+          r.user_id = currentUser.id;   // 认领旧账号的记录，见 collectDirty 的说明
+        }
+        if (remote[r.id]) {
+          if (r.cloudMissing) { delete r.cloudMissing; unflagged++; }
+          return;
+        }
+        var known = state.ids[r.id];
+        if (known && pending.indexOf(r.id) === -1 && tsOf(localUpdatedAt(r)) <= tsOf(known)) {
+          if (!r.cloudMissing) { r.cloudMissing = true; marked++; }
+        }
+      });
+
+      // 云端有、影子没有的（别的设备新建的）：影子补上，顺手拉回内容
+      var missing = [];
+      for (var id in remote) {
+        if (!remote.hasOwnProperty(id)) continue;
+        if (!state.ids[id]) missing.push(id);
+        else if (tsOf(remote[id]) > tsOf(state.ids[id])) missing.push(id);
+      }
+      state.sweptAt = Date.now();
+      if (missing.length > 0) {
+        var res2 = await supabase.from(table).select(SYNC_PULL_COLS).in('id', missing);
+        if (!res2.error) mergeCloudRecords(state, res2.data || []);
+      }
+      if (marked > 0 || unflagged > 0) {
+        persist(STORAGE_KEY, JSON.stringify(records));
+        if (marked > 0) {
+          showSyncError('注意：云端缺 ' + marked + ' 条本地记录（没有删任何东西）。' +
+                        '如果是换账号或云端被清过，先别动；确认要清再逐条删。');
+        }
+      }
+    }
+
+    function scheduleSync(delayOverride) {
+      if (syncTimer) { clearTimeout(syncTimer); syncTimer = null; }
+      if (!syncEnabled || !currentUser) return;
+      var delay;
+      if (typeof delayOverride === 'number') {
+        delay = delayOverride;
+      } else if (syncFails > 0) {
+        delay = Math.min(TICK_DIRTY_MS * Math.pow(2, syncFails), TICK_MAX_MS);
+      } else {
+        delay = hasPendingWork(getSyncState(currentUser.id)) ? TICK_DIRTY_MS : TICK_IDLE_MS;
+      }
+      syncTimer = setTimeout(function () { syncTimer = null; syncToCloud(); }, delay);
+    }
+
+    async function loadFromCloud() {
+      if (!syncEnabled || !supabase || !currentUser) return;
+      var uid = currentUser.id;
+      var state = getSyncState(uid);
+      try {
+        updateSyncStatusUI('syncing', '同步中');
+        var firstRun = !state.cursor && Object.keys(state.ids).length === 0;
+        await pullIncremental(state, firstRun);
+        putSyncState(uid, state);
+        renderRecords();
+        renderSummary();
+        updateMobileBadge();
         updateSyncStatusUI('online', '已同步');
+        lastSyncAt = Date.now();
+        syncFails = 0;
+        putSyncState(uid, state);
+        // 本机还有没推上去的（新写的 / 改过的 / 待删的）→ 马上推，不等定时器
+        if (hasPendingWork(getSyncState(uid))) { scheduleSync(0); return; }
       } catch (e) {
         updateSyncStatusUI('offline', '离线');
         showSyncError('拉取云端失败：' + (e.message || e));
       }
+      scheduleSync();
     }
 
     function applyWallpaper(wpClass, customDataUrl) {
@@ -3896,12 +4078,19 @@
       });
     }
 
-    setInterval(function() {
-      if (syncEnabled && currentUser) syncToCloud();
-    }, 60000);
+    // 回到前台才同步，且距上次同步超过 60 秒；切走时什么都不发
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) return;
+      if (!syncEnabled || !currentUser) return;
+      if (Date.now() - lastSyncAt < 60 * 1000) return;
+      syncToCloud();
+    });
 
-    window.addEventListener('beforeunload', function() {
-      if (syncEnabled && currentUser) syncToCloud();
+    // 关页面前：只有真有待推的东西才发，没有就一个请求都不发
+    window.addEventListener('beforeunload', function () {
+      if (!syncEnabled || !currentUser) return;
+      if (!hasPendingWork(getSyncState(currentUser.id))) return;
+      syncToCloud();
     });
 
     // ===== 象览（xianglan）能力申报：宿主注入 window.xianglan 时才注册；单独打开时整段跳过，不影响应用 =====
